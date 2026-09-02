@@ -14,7 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'address', 'id_proof', 'photo', 'aadhar_card', 'pan_card', 'otp', 'otp_expires_at', 'is_phone_verified', 'bank_name', 'bank_account_number', 'bank_ifsc', 'bank_account_type', 'additional_documents'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'address', 'role', 'agent_id', 'id_proof', 'photo', 'aadhar_card', 'pan_card', 'otp', 'otp_expires_at', 'is_phone_verified', 'bank_name', 'bank_account_number', 'bank_ifsc', 'bank_account_type', 'additional_documents'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {

@@ -184,4 +184,43 @@ class ClientController extends Controller
             return ApiResponse::error('KYC upload failed: ' . $e->getMessage(), 500);
         }
     }
+
+    // ➕ Add New Client / Member by Agent
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20|unique:users,phone',
+            'email' => 'nullable|string|email|max:255|unique:users,email',
+            'address' => 'nullable|string',
+        ]);
+
+        $agentId = $request->user()->id;
+
+        // Auto-generate email if not provided
+        $email = !empty($validated['email']) ? $validated['email'] : ($validated['phone'] . '@janta.community');
+
+        // Check if generated email is taken
+        if (User::where('email', $email)->exists()) {
+            $email = $validated['phone'] . '_' . time() . '@janta.community';
+        }
+
+        // Default password is their phone number
+        $password = \Illuminate\Support\Facades\Hash::make($validated['phone']);
+
+        $client = User::create([
+            'name' => $validated['name'],
+            'phone' => $validated['phone'],
+            'email' => $email,
+            'address' => $validated['address'] ?? null,
+            'password' => $password,
+            'agent_id' => $agentId,
+            'role' => 'member',
+        ]);
+
+        $client->assignRole('member');
+
+        return ApiResponse::success($client, 'Client created successfully');
+    }
+
 }

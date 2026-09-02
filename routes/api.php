@@ -20,6 +20,7 @@ Route::prefix('admin')->group(function () {
 // 📱 Public User Routes
 
 Route::post('/login', [\App\Http\Controllers\Api\UserAuthController::class, 'login']);
+Route::post('/register', [\App\Http\Controllers\Api\UserAuthController::class, 'register']);
 
 // 🛡️ Protected Routes
 Route::middleware(['auth:sanctum'])->group(function () {
@@ -52,6 +53,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Members / Clients
         Route::get('/search-member', [\App\Http\Controllers\Agent\MemberController::class, 'search']);
         Route::get('/clients', [\App\Http\Controllers\Agent\ClientController::class, 'index']);
+        Route::post('/clients', [\App\Http\Controllers\Agent\ClientController::class, 'store']);
         Route::get('/clients/{id}', [\App\Http\Controllers\Agent\ClientController::class, 'show']);
         Route::post('/clients/kyc', [\App\Http\Controllers\Agent\ClientController::class, 'submitKyc']);
         
@@ -74,6 +76,7 @@ Route::get('/profile-photo/{userId}/{filename}', [\App\Http\Controllers\Api\Docu
 // 🧑 User Specific API Routes
 Route::prefix('user')->group(function () {
     Route::post('/login', [\App\Http\Controllers\Api\UserAuthController::class, 'login']);
+Route::post('/register', [\App\Http\Controllers\Api\UserAuthController::class, 'register']);
 
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\User\DashboardController::class, 'index']);
