@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinAdmin - Enterprise Finance Portal</title>
+    <title>Janta Traders - Enterprise Finance Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- DataTables -->
@@ -162,8 +162,8 @@
     <div id="login-screen" class="glass-overlay">
         <div class="login-card">
             <div class="login-header">
-                <i class="fa-solid fa-shield-halved"></i>
-                <h2>FinAdmin Portal</h2>
+                <img src="/images/janta_trader_logo.jpg" alt="Janta Traders" style="width: 68px; height: 68px; object-fit: contain; border-radius: 14px; margin-bottom: 12px; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.08);">
+                <h2>Janta Traders Portal</h2>
                 <p>Welcome back! Please login to your administrative account.</p>
             </div>
             <form id="login-form">
@@ -193,9 +193,9 @@
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="brand">
-                <i class="fa-solid fa-wallet"></i>
+                <img src="/images/janta_trader_logo.jpg" alt="Janta Traders" class="brand-logo">
                 <div class="brand-details">
-                    <span class="brand-name">FinAdmin</span>
+                    <span class="brand-name">Janta Traders</span>
                     <span class="brand-sub">Enterprise Finance</span>
                 </div>
             </div>

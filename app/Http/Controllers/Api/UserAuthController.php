@@ -52,6 +52,7 @@ class UserAuthController extends Controller
             'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
             'role' => 'member',
+            'is_phone_verified' => true,
         ]);
 
         $user->assignRole('member');

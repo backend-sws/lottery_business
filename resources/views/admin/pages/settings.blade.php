@@ -18,7 +18,7 @@
                 <div class="flex-column gap-12">
                     <div class="input-group" style="margin-bottom:0;">
                         <label>Business / Platform Name</label>
-                        <div class="input-field"><input type="text" value="FinAdmin Enterprise Finance"></div>
+                        <div class="input-field"><input type="text" value="Janta Traders Enterprise Finance"></div>
                     </div>
                     <div class="input-group" style="margin-bottom:0; margin-top:12px;">
                         <label>Base Currency Code</label>
