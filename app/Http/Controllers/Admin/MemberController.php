@@ -156,10 +156,14 @@ class MemberController extends Controller
         $this->authorize('update', User::class);
 
         $member = User::findOrFail($id);
-        $member->update($request->validated());
+        $data = $request->validated();
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
+        $member->update($data);
 
         return ApiResponse::success(
-            null,
+            $member,
             'Member updated successfully'
         );
     }

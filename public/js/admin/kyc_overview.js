@@ -417,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ? data
                         : []));
             const agents = membersList;
+            window.currentAgentsList = agents;
 
             // Calculate metrics dynamically
             let totalCollections = 0;

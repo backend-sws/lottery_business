@@ -453,6 +453,8 @@
     window.closeModal = function() {
         modal.style.display = 'none';
         modalBody.innerHTML = '';
+        const modalCard = modal.querySelector('.modal-card-new');
+        if (modalCard) modalCard.style.maxWidth = '';
     };
 
     window.openEditCommitteeModal = async function(id) {
