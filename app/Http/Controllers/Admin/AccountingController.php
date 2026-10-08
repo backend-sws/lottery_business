@@ -139,8 +139,13 @@ class AccountingController extends Controller
             ];
         });
 
+        $commAssetsTotal = max(0, $commCashCollected - $commPayoutsDisbursed) + $commPendingReceivables;
+        $loanAssetsTotal = $loanCashCollected + $loanPrincipalPending + $loanInterestPending;
+
         return ApiResponse::success([
             'committee' => [
+                'total_assets' => $commAssetsTotal,
+                'total_liabilities' => $commPendingPayouts,
                 'assets' => [
                     ['name' => 'Cash', 'balance' => max(0, $commCashCollected - $commPayoutsDisbursed)],
                     ['name' => 'Receivables', 'balance' => $commPendingReceivables],
@@ -148,8 +153,11 @@ class AccountingController extends Controller
                 'liabilities' => [
                     ['name' => 'Pending Payouts', 'balance' => $commPendingPayouts],
                 ],
+                'equity' => [],
             ],
             'loan' => [
+                'total_assets' => $loanAssetsTotal,
+                'total_liabilities' => $loanPrincipalDisbursed,
                 'assets' => [
                     ['name' => 'Collected', 'balance' => $loanCashCollected],
                     ['name' => 'Pending Principal', 'balance' => $loanPrincipalPending],

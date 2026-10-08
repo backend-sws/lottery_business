@@ -2,8 +2,8 @@
     // ----- DATA FETCHING -----
     async function loadDashboardData() {
         try {
-            const res = await fetch('/api/admin/dashboard', { headers: getHeaders() });
-            if(res.status === 401) { logoutBtn.click(); return; }
+            const res = await window.apiFetch('/api/admin/dashboard');
+            if (!res || !res.ok) return;
             const payload = await res.json();
             if(!payload.data) return;
             const stats = payload.data;
@@ -42,17 +42,17 @@
             const dashKycCompliance = document.getElementById('dash-kyc-compliance');
             if (dashKycCompliance) dashKycCompliance.textContent = (stats.kyc_compliance_rate || 0) + '%';
 
-            // Populate recent transactions on dashboard
+            // Populate recent transactions on dashboard (Batched DOM Write)
             const dashTxTbody = document.getElementById('dashboard-transactions-tbody');
             if (dashTxTbody) {
-                dashTxTbody.innerHTML = '';
                 if (stats.recent_transactions && stats.recent_transactions.length > 0) {
+                    let txHtml = '';
                     stats.recent_transactions.forEach(tx => {
                         let badgeClass = 'badge-success';
                         if (tx.status.toLowerCase() === 'pending') badgeClass = 'badge-pending';
                         if (tx.status.toLowerCase() === 'failed') badgeClass = 'badge-failed';
                         
-                        dashTxTbody.innerHTML += `
+                        txHtml += `
                             <tr>
                                 <td>
                                     <div class="user-avatar-group">
@@ -69,6 +69,7 @@
                             </tr>
                         `;
                     });
+                    dashTxTbody.innerHTML = txHtml;
                 } else {
                     dashTxTbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding: 24px; color: var(--text-muted);">No recent transactions recorded yet.</td></tr>';
                 }
@@ -88,13 +89,13 @@
                 distPendingPct.textContent = (stats.member_distribution.pending || 0) + '%';
             }
 
-            // Populate recent activity list
+            // Populate recent activity list (Batched DOM Write)
             const activityList = document.getElementById('dashboard-activity-list');
             if (activityList) {
-                activityList.innerHTML = '';
                 if (stats.recent_activity && stats.recent_activity.length > 0) {
+                    let actHtml = '';
                     stats.recent_activity.forEach(act => {
-                        activityList.innerHTML += `
+                        actHtml += `
                             <div class="activity-item">
                                 <div class="activity-icon-box" style="background-color: ${act.bg}; color: ${act.color};">
                                     <i class="${act.icon}"></i>
@@ -106,6 +107,7 @@
                             </div>
                         `;
                     });
+                    activityList.innerHTML = actHtml;
                 } else {
                     activityList.innerHTML = '<div style="padding:15px; text-align:center; color:var(--text-muted); font-size:0.85rem;">No recent activities yet.</div>';
                 }
@@ -125,22 +127,24 @@
                 priorityOverdueDesc.textContent = `${stats.priority_tasks.overdue_accounts || 0} accounts currently overdue.`;
             }
 
-            renderCharts(stats.monthly_trends, stats.member_distribution);
+            if (typeof renderCharts === 'function') {
+                renderCharts(stats.monthly_trends, stats.member_distribution);
+            }
         } catch (err) { console.error(err); }
     }
 
     async function loadPaidMembersData() {
         try {
-            const res = await fetch('/api/admin/dashboard/paid-members', { headers: getHeaders() });
-            if(res.status === 401) { logoutBtn.click(); return; }
+            const res = await window.apiFetch('/api/admin/dashboard/paid-members');
+            if (!res || !res.ok) return;
             const payload = await res.json();
             const data = payload.data || [];
             const tbody = document.getElementById('paid-members-tbody');
             if (!tbody) return;
-            tbody.innerHTML = '';
             if(Array.isArray(data) && data.length > 0) {
+                let rowsHtml = '';
                 data.forEach(m => {
-                    tbody.innerHTML += `
+                    rowsHtml += `
                         <tr>
                             <td>#${m.id}</td>
                             <td><strong>${m.name}</strong></td>
@@ -149,6 +153,7 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = rowsHtml;
             } else {
                 tbody.innerHTML = '<tr><td colspan="4" class="text-center" style="padding: 20px; color: var(--text-muted);">No fully paid members found.</td></tr>';
             }
@@ -157,16 +162,16 @@
 
     async function loadDueMembersData() {
         try {
-            const res = await fetch('/api/admin/dashboard/due-members', { headers: getHeaders() });
-            if(res.status === 401) { logoutBtn.click(); return; }
+            const res = await window.apiFetch('/api/admin/dashboard/due-members');
+            if (!res || !res.ok) return;
             const payload = await res.json();
             const data = payload.data || [];
             const tbody = document.getElementById('due-members-tbody');
             if (!tbody) return;
-            tbody.innerHTML = '';
             if(Array.isArray(data) && data.length > 0) {
+                let rowsHtml = '';
                 data.forEach(m => {
-                    tbody.innerHTML += `
+                    rowsHtml += `
                         <tr>
                             <td>#${m.id}</td>
                             <td><strong>${m.name}</strong></td>
@@ -176,6 +181,7 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = rowsHtml;
             } else {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding: 20px; color: var(--text-muted);">No members with overdue payments.</td></tr>';
             }

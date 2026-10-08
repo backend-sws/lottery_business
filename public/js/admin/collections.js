@@ -1,9 +1,11 @@
 
     async function loadCollectionCommittees() {
         try {
-            const res = await fetch('/api/admin/committees', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/committees');
+            if (!res || !res.ok) return;
             const data = await res.json();
             const tbody = document.getElementById('collection-committees-tbody');
+            if (!tbody) return;
             const committees = Array.isArray(data?.data?.data)
                 ? data.data.data
                 : (Array.isArray(data?.data)
@@ -11,10 +13,10 @@
                     : (Array.isArray(data)
                         ? data
                         : []));
-            tbody.innerHTML = '';
             if (committees.length > 0) {
+                let commHtml = '';
                 committees.forEach(c => {
-                    tbody.innerHTML += `
+                    commHtml += `
                         <tr>
                             <td>#${c.id}</td>
                             <td><strong>${c.name}</strong></td>
@@ -24,28 +26,34 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = commHtml;
             } else {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center">No committees found.</td></tr>';
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Load Collection Committees Error:', err); }
     }
 
     async function loadCommitteeDetails(id) {
         if(!id) return;
         try {
-            const res = await fetch(`/api/admin/committees/${id}/collection-stats`, { headers: getHeaders() });
+            const res = await window.apiFetch(`/api/admin/committees/${id}/collection-stats`);
+            if (!res || !res.ok) return;
             const data = await res.json();
             
-            document.getElementById('cd-title').textContent = `${data.committee.name} Collection`;
+            const titleElem = document.getElementById('cd-title');
+            if (titleElem && data.committee) {
+                titleElem.textContent = `${data.committee.name} Collection`;
+            }
             
             const tbody = document.getElementById('committee-details-tbody');
-            tbody.innerHTML = '';
+            if (!tbody) return;
             
-            const commAmount = data.committee.amount || 0;
+            const commAmount = data.committee?.amount || 0;
             
-            if(data.members && Array.isArray(data.members)) {
+            if(data.members && Array.isArray(data.members) && data.members.length > 0) {
+                let memHtml = '';
                 data.members.forEach(m => {
-                    tbody.innerHTML += `
+                    memHtml += `
                         <tr>
                             <td>#${m.id}</td>
                             <td><strong>${m.name}</strong></td>
@@ -62,8 +70,11 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = memHtml;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No member records found for this committee.</td></tr>';
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Load Committee Details Error:', err); }
     }
 
     // Modal & Collect Payment dynamic callbacks
@@ -99,9 +110,8 @@
         const paidDate = document.getElementById('ci_paid_date').value;
         
         try {
-            const res = await fetch('/api/admin/installments/collect', {
+            const res = await window.apiFetch('/api/admin/installments/collect', {
                 method: 'POST',
-                headers: getHeaders(),
                 body: JSON.stringify({
                     user_id: userId,
                     committee_id: committeeId,
@@ -110,6 +120,7 @@
                     status: 'paid'
                 })
             });
+            if (!res) return;
             const data = await res.json();
             if (data.status === true || data.status === 'success') {
                 alert(data.message || 'Payment collected successfully!');

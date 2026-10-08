@@ -160,11 +160,9 @@
             }
 
             let options = {
-                method: 'POST',
-                headers: getHeaders()
+                method: 'POST'
             };
             if (bodyData instanceof FormData) {
-                delete options.headers['Content-Type'];
                 options.body = bodyData;
             } else {
                 options.body = JSON.stringify(bodyData);
@@ -173,21 +171,21 @@
             // Some entities define their own method
             if (entity === 'edit-committee' || entity === 'edit-material' || entity === 'edit-material-stock') options.method = 'PUT';
 
-            const res = await fetch(endpoint, options);
+            const res = await window.apiFetch(endpoint, options);
+            if (!res) return;
 
             const data = await res.json();
             if (res.ok) {
                 // If creating member and a committee ID was specified, automatically enroll them
                 if (entity === 'members' && document.getElementById('m_enroll_comm_id') && document.getElementById('m_enroll_comm_id').value) {
                     try {
-                        const enrollRes = await fetch(`/api/admin/members/${data.data.id}/enroll`, {
+                        const enrollRes = await window.apiFetch(`/api/admin/members/${data.data.id}/enroll`, {
                             method: 'POST',
-                            headers: getHeaders(),
                             body: JSON.stringify({ committee_id: document.getElementById('m_enroll_comm_id').value })
                         });
-                        if (enrollRes.ok) {
+                        if (enrollRes && enrollRes.ok) {
                             alert('Success: Member created and enrolled in committee');
-                        } else {
+                        } else if (enrollRes) {
                             const errData = await enrollRes.json();
                             alert('Member created, but enrollment failed: ' + (errData.message || 'Error'));
                         }
@@ -251,7 +249,8 @@
         // Load specific members in case they want to select an individual
         setTimeout(async () => {
             try {
-                const res = await fetch('/api/admin/members?paginate=200', { headers: getHeaders() });
+                const res = await window.apiFetch('/api/admin/members?paginate=200');
+                if (!res || !res.ok) return;
                 const json = await res.json();
                 const members = json.data?.data || json.data || [];
                 const select = document.getElementById('cn_user_id');
@@ -276,15 +275,15 @@
         const message = document.getElementById('cn_message').value;
 
         try {
-            const res = await fetch('/api/admin/notifications/send-custom', {
+            const res = await window.apiFetch('/api/admin/notifications/send-custom', {
                 method: 'POST',
-                headers: getHeaders(),
                 body: JSON.stringify({
                     user_id: userId,
                     title: title,
                     message: message
                 })
             });
+            if (!res) return;
             const data = await res.json();
             if (data.status === true || data.status === 'success') {
                 alert(data.message || 'Notification sent successfully!');
@@ -312,13 +311,18 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                authToken = data.data.token;
-                localStorage.setItem('admin_token', authToken);
+                const newToken = data.data.token;
+                localStorage.setItem('admin_token', newToken);
+                if (typeof authToken !== 'undefined') authToken = newToken;
                 if (data.data.user) {
                     localStorage.setItem('admin_user', JSON.stringify(data.data.user));
                 }
                 errorMsg.style.display = 'none';
                 showApp();
+                // Load community filter options now that session is active
+                if (typeof loadCommunityFilterOptions === 'function') {
+                    loadCommunityFilterOptions();
+                }
             } else {
                 errorMsg.textContent = data.message || "Invalid credentials";
                 errorMsg.style.display = 'block';
@@ -330,10 +334,22 @@
     });
 
     logoutBtn.addEventListener('click', async () => {
-        try { await fetch('/api/admin/logout', { method: 'POST', headers: getHeaders() }); } catch(e) {}
+        try {
+            const currentToken = window.getAuthToken ? window.getAuthToken() : localStorage.getItem('admin_token');
+            if (currentToken) {
+                await fetch('/api/admin/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${currentToken}`, 'Accept': 'application/json' }
+                });
+            }
+        } catch(e) {}
+        if (window.routeAbortController) {
+            try { window.routeAbortController.abort(); } catch(e) {}
+            window.routeAbortController = null;
+        }
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
-        authToken = null;
+        if (typeof authToken !== 'undefined') authToken = null;
         window.location.hash = '';
         showLogin();
     });

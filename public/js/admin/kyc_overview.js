@@ -6,12 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load KYC page user list dropdown
     async function loadKycData() {
         try {
-            const res = await fetch('/api/admin/members', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/members');
+            if (!res || !res.ok) return;
             const data = await res.json();
             const select = document.getElementById('kyc_user_select');
-            if (!select) return;
-
-            select.innerHTML = '<option value="">-- Choose Member / Agent --</option>';
+            
             const membersList = Array.isArray(data?.data?.data)
                 ? data.data.data
                 : (Array.isArray(data?.data)
@@ -19,20 +18,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     : (Array.isArray(data)
                         ? data
                         : []));
-            if (membersList.length > 0) {
-                membersList.forEach(m => {
-                    const roleText = m.roles && m.roles.some(r => r.name === 'agent') ? 'Agent' : 'Member';
-                    select.innerHTML += `<option value="${m.id}">${m.name} (${roleText} - #${m.id})</option>`;
-                });
-            } else {
-                select.innerHTML = '<option value="">No members/agents found</option>';
+
+            if (select) {
+                if (membersList.length > 0) {
+                    let optHtml = '<option value="">-- Choose Member / Agent --</option>';
+                    membersList.forEach(m => {
+                        const roleText = m.roles && m.roles.some(r => r.name === 'agent') ? 'Agent' : 'Member';
+                        optHtml += `<option value="${m.id}">${m.name} (${roleText} - #${m.id})</option>`;
+                    });
+                    select.innerHTML = optHtml;
+                } else {
+                    select.innerHTML = '<option value="">No members/agents found</option>';
+                }
             }
 
-            // Populate the KYC review list queue
+            // Populate the KYC review list queue (Batched DOM Write)
             const reviewList = document.getElementById('kyc-review-list');
             if (reviewList) {
-                reviewList.innerHTML = '';
                 if (membersList.length > 0) {
+                    let reviewsHtml = '';
                     membersList.forEach(m => {
                         const roleText = m.roles && m.roles.some(r => r.name === 'agent') ? 'Agent' : 'Member';
                         
@@ -75,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
                         }
 
-                        reviewList.innerHTML += `
+                        reviewsHtml += `
                             <div style="margin:0; padding:12px; background:#ffffff; border-radius:8px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:10px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
                                 <div style="display:flex; justify-content:space-between; align-items:center;">
                                     <div>
@@ -93,6 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         `;
                     });
+                    reviewList.innerHTML = reviewsHtml;
                 } else {
                     reviewList.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">No members/agents registered.</div>`;
                 }
@@ -106,9 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadCollectionsOverviewData() {
         try {
             // Fetch stats from dashboard API
-            const res = await fetch('/api/admin/dashboard', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/dashboard');
+            if (!res || !res.ok) return;
             const payload = await res.json();
             const stats = payload.data;
+            if (!stats) return;
 
             // ===== METRIC CARD 1: Total Collected Today =====
             const todayColl = document.getElementById('coll-metric-collected');
@@ -170,8 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            // ===== RECENT COLLECTIONS TABLE =====
-            const collRes = await fetch('/api/admin/agents/collections', { headers: getHeaders() });
+            // ===== RECENT COLLECTIONS TABLE (Batched DOM Write) =====
+            const collRes = await window.apiFetch('/api/admin/agents/collections');
+            if (!collRes || !collRes.ok) return;
             const rawColData = await collRes.json();
             const colData = Array.isArray(rawColData.data?.data) 
                 ? rawColData.data.data 
@@ -180,12 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const collTbody = document.getElementById('collections-table-tbody');
             if (collTbody) {
-                collTbody.innerHTML = '';
                 const countElem = document.getElementById('collections-table-count');
                 
                 if (colData.length > 0) {
                     if (countElem) countElem.textContent = `Showing ${colData.length} of ${totalCount} collections total`;
                     
+                    let colRowsHtml = '';
                     colData.forEach(c => {
                         const agentName = c.agent ? c.agent.name : 'Unknown Agent';
                         const memberName = c.member ? c.member.name : 'Unknown Member';
@@ -238,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             methodBadge = 'badge-pending';
                         }
 
-                        collTbody.innerHTML += `
+                        colRowsHtml += `
                             <tr>
                                 <td>
                                     <div class="user-avatar-group">
@@ -255,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </tr>
                         `;
                     });
+                    collTbody.innerHTML = colRowsHtml;
                 } else {
                     if (countElem) countElem.textContent = 'No collections found';
                     collTbody.innerHTML = `
@@ -315,6 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const strokeColor = '#FF7A00';
 
+            const existingTrend = Chart.getChart(ctxTrend);
+            if (existingTrend) existingTrend.destroy();
             if (collectionsTrendChartInstance) collectionsTrendChartInstance.destroy();
             collectionsTrendChartInstance = new Chart(canvasCtx, {
                 type: 'line',
@@ -373,6 +384,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const legendCash = document.getElementById('coll-methods-cash-pct');
             if (legendCash) legendCash.textContent = cashPct + '%';
 
+            const existingMethod = Chart.getChart(ctxMethod);
+            if (existingMethod) existingMethod.destroy();
             if (collectionsMethodsChartInstance) collectionsMethodsChartInstance.destroy();
             collectionsMethodsChartInstance = new Chart(ctxMethod.getContext('2d'), {
                 type: 'doughnut',
@@ -403,12 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load agents database list
     async function loadAgentsList() {
         try {
-            const res = await fetch('/api/admin/members?role=agent', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/members?role=agent');
+            if (!res || !res.ok) return;
             const data = await res.json();
             const tbody = document.getElementById('agents-table-tbody');
             if (!tbody) return;
 
-            tbody.innerHTML = '';
             const membersList = Array.isArray(data?.data?.data)
                 ? data.data.data
                 : (Array.isArray(data?.data)
@@ -469,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (agents.length > 0) {
+                let rowsHtml = '';
                 agents.forEach(a => {
                     const todayCollection = a.today_collection || '₹0';
                     const targetProgress = a.target_progress || 0;
@@ -477,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (statusText.toLowerCase() === 'offline') badgeClass = 'badge-neutral';
                     if (statusText.toLowerCase() === 'on leave') badgeClass = 'badge-failed';
 
-                    tbody.innerHTML += `
+                    rowsHtml += `
                         <tr>
                             <td>
                                 <div class="user-avatar-group">
@@ -513,6 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </tr>
                     `;
                 });
+                tbody.innerHTML = rowsHtml;
             } else {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">No agents registered in system.</td></tr>';
             }
@@ -538,10 +553,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.approveCollectionFromOverview = async function(id) {
         if (!confirm('Are you sure you want to approve this collection?')) return;
         try {
-            const res = await fetch(`/api/admin/agents/collections/${id}/approve`, {
-                method: 'POST',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/agents/collections/${id}/approve`, {
+                method: 'POST'
             });
+            if (!res) return;
             const data = await res.json();
             if (data.status) {
                 alert('Collection approved successfully!');
@@ -558,10 +573,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.rejectCollectionFromOverview = async function(id) {
         if (!confirm('Are you sure you want to reject this collection?')) return;
         try {
-            const res = await fetch(`/api/admin/agents/collections/${id}/reject`, {
-                method: 'POST',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/agents/collections/${id}/reject`, {
+                method: 'POST'
             });
+            if (!res) return;
             const data = await res.json();
             if (data.status) {
                 alert('Collection rejected successfully!');
@@ -578,10 +593,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deleteCollectionFromOverview = async function(id) {
         if (!confirm('Are you sure you want to delete this collection record? This action cannot be undone.')) return;
         try {
-            const res = await fetch(`/api/admin/agents/collections/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/agents/collections/${id}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             const data = await res.json();
             if (data.status) {
                 alert(data.message || 'Collection deleted successfully!');
@@ -619,10 +634,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // KYC Approve and Reject actions
     window.approveKyc = async function(id) {
         try {
-            const res = await fetch(`/api/admin/kyc/${id}/approve`, {
-                method: 'POST',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/kyc/${id}/approve`, {
+                method: 'POST'
             });
+            if (!res) return;
             const data = await res.json();
             alert(data.message || 'KYC Approved successfully.');
             loadKycData();
@@ -635,10 +650,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.rejectKyc = async function(id) {
         if (!confirm('Are you sure you want to reject and clear these KYC documents?')) return;
         try {
-            const res = await fetch(`/api/admin/kyc/${id}/reject`, {
-                method: 'POST',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/kyc/${id}/reject`, {
+                method: 'POST'
             });
+            if (!res) return;
             const data = await res.json();
             alert(data.message || 'KYC Documents rejected and cleared.');
             loadKycData();

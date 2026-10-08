@@ -1,15 +1,18 @@
 
     async function loadLoansData() {
         try {
-            const res = await fetch('/api/admin/loans', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/loans');
+            if (!res || !res.ok) return;
             const payload = await res.json();
             const data = payload.data || [];
             const tbody = document.getElementById('loans-tbody');
-            tbody.innerHTML = '';
-            if(Array.isArray(data)) {
+            if (!tbody) return;
+            
+            if(Array.isArray(data) && data.length > 0) {
+                let loansHtml = '';
                 data.forEach(l => {
                     const userName = l.user ? l.user.name : 'Unknown';
-                    tbody.innerHTML += `
+                    loansHtml += `
                         <tr id="loan-row-${l.id}">
                             <td>#${l.id}</td>
                             <td><strong>${userName}</strong></td>
@@ -34,12 +37,16 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = loansHtml;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No loans found.</td></tr>';
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Load Loans Error:', err); }
     }
 
     window.toggleLoanDetails = async function(id) {
         const detailRow = document.getElementById(`loan-details-${id}`);
+        if (!detailRow) return;
         if (detailRow.style.display === 'table-row') {
             detailRow.style.display = 'none';
             return;
@@ -49,10 +56,14 @@
         const contentDiv = document.getElementById(`loan-details-content-${id}`);
 
         try {
-            const res = await fetch(`/api/admin/loans/${id}`, { headers: getHeaders() });
+            const res = await window.apiFetch(`/api/admin/loans/${id}`);
+            if (!res || !res.ok) {
+                if (contentDiv) contentDiv.innerHTML = `<div class="text-danger text-center">Failed to load installments.</div>`;
+                return;
+            }
             const payload = await res.json();
             const loan = payload.data;
-            const installments = loan.installments || [];
+            const installments = loan?.installments || [];
 
             let total = installments.length;
             let paid = installments.filter(i => i.status === 'paid').length;
@@ -119,10 +130,10 @@
             });
 
             html += `</tbody></table>`;
-            contentDiv.innerHTML = html;
+            if (contentDiv) contentDiv.innerHTML = html;
 
         } catch (err) {
-            contentDiv.innerHTML = `<div class="text-danger text-center">Failed to load installments.</div>`;
+            if (contentDiv) contentDiv.innerHTML = `<div class="text-danger text-center">Failed to load installments.</div>`;
             console.error(err);
         }
     };
@@ -131,10 +142,10 @@
         if (!confirm(`Are you sure you want to delete installment #${installmentId}? This action cannot be undone.`)) return;
 
         try {
-            const res = await fetch(`/api/admin/loan-installments/${installmentId}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/loan-installments/${installmentId}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             const data = await res.json();
             if (res.ok && (data.status === true || data.status === 'success' || data.success === true)) {
                 alert(data.message || 'Loan installment deleted successfully');
@@ -155,17 +166,18 @@
     window.collectLoanInstallment = async function(installmentId, loanId) {
         if (!confirm("Confirm payment collection for this installment?")) return;
         try {
-            const res = await fetch(`/api/admin/loans/${installmentId}/collect`, {
-                method: 'POST',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/loans/${installmentId}/collect`, {
+                method: 'POST'
             });
+            if (!res) return;
             const data = await res.json();
             if (res.ok) {
                 alert('Success: ' + data.message);
                 // Refresh the slide down section
-                document.getElementById(`loan-details-${loanId}`).style.display = 'none';
+                const detailElem = document.getElementById(`loan-details-${loanId}`);
+                if (detailElem) detailElem.style.display = 'none';
                 loadLoansData();
-                loadBalanceSheetData();
+                if (typeof loadBalanceSheetData === 'function') loadBalanceSheetData();
             } else {
                 alert('Error: ' + data.message);
             }
@@ -178,10 +190,10 @@
     window.deleteLoan = async function(id) {
         if (!confirm("Are you sure you want to delete this loan? This will delete all its installments as well. This action cannot be undone.")) return;
         try {
-            const res = await fetch(`/api/admin/loans/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/loans/${id}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             const data = await res.json();
             if (res.ok) {
                 alert('Success: ' + (data.message || 'Loan deleted successfully'));

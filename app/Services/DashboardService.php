@@ -13,14 +13,16 @@ use App\Models\Material;
 use App\Models\Lottery;
 use App\Models\Payout;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardService
 {
-    // 📊 Main Dashboard Stats (100% Dynamic)
+    // 📊 Main Dashboard Stats (Optimized with short 5s debounce cache)
     public function getStats()
     {
-        $today = Carbon::today();
-        $totalMembers = User::role('member')->count();
+        return Cache::remember('admin_dashboard_stats', 5, function () {
+            $today = Carbon::today();
+            $totalMembers = User::role('member')->count();
         $totalAgents = User::role('agent')->count();
         
         // Dynamic KYC Compliance
@@ -328,6 +330,7 @@ class DashboardService
                 'overdue_accounts' => $overdueLoansCount + $overdueInstCount
             ]
         ];
+        });
     }
 
     private function formatAmountToCrOrLakh($amount)

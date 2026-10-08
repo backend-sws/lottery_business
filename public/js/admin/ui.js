@@ -130,7 +130,8 @@
             `;
             setTimeout(async () => {
                 try {
-                    const res = await fetch('/api/admin/members?paginate=200', { headers: getHeaders() });
+                    const res = await window.apiFetch('/api/admin/members?paginate=200');
+                    if (!res || !res.ok) return;
                     const json = await res.json();
                     const members = json.data?.data || json.data || [];
                     const select = document.getElementById('i_user');
@@ -279,7 +280,8 @@
 
             setTimeout(async () => {
                 try {
-                    const res = await fetch('/api/admin/members', { headers: getHeaders() });
+                    const res = await window.apiFetch('/api/admin/members?paginate=200');
+                    if (!res || !res.ok) return;
                     const data = await res.json();
                     const membersList = Array.isArray(data?.data?.data)
                         ? data.data.data
@@ -384,7 +386,8 @@
             `;
             setTimeout(async () => {
                 try {
-                    const res = await fetch('/api/admin/materials', { headers: getHeaders() });
+                    const res = await window.apiFetch('/api/admin/materials');
+                    if (!res || !res.ok) return;
                     const json = await res.json();
                     const select = document.getElementById('stock_mat_id');
                     if (json.data && select) {
@@ -428,7 +431,8 @@
             `;
             setTimeout(async () => {
                 try {
-                    const res = await fetch('/api/admin/materials', { headers: getHeaders() });
+                    const res = await window.apiFetch('/api/admin/materials');
+                    if (!res || !res.ok) return;
                     const json = await res.json();
                     const select = document.getElementById('estock_mat_id');
                     if (json.data && select) {
@@ -459,7 +463,8 @@
 
     window.openEditCommitteeModal = async function(id) {
         try {
-            const res = await fetch(`/api/admin/committees/${id}`, { headers: getHeaders() });
+            const res = await window.apiFetch(`/api/admin/committees/${id}`);
+            if (!res || !res.ok) return;
             const data = await res.json();
             openModal('edit-committee', id);
             document.getElementById('ec_name').value = data.name;
@@ -476,10 +481,10 @@
     window.deleteCommittee = async function(id) {
         if (!confirm("Are you sure you want to delete this committee? This action cannot be undone.")) return;
         try {
-            const res = await fetch(`/api/admin/committees/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/committees/${id}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             const data = await res.json();
             if (res.ok) {
                 alert('Success: ' + (data.message || 'Committee Deleted'));
@@ -540,7 +545,8 @@
         
         // Fetch pending installments to populate due_date select
         try {
-            const res = await fetch(`/api/admin/installments/pending?user_id=${userId}&committee_id=${committeeId}`, { headers: getHeaders() });
+            const res = await window.apiFetch(`/api/admin/installments/pending?user_id=${userId}&committee_id=${committeeId}`);
+            if (!res || !res.ok) return;
             const json = await res.json();
             const pendingList = json.data || [];
             

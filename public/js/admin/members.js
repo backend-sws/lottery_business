@@ -38,10 +38,11 @@
                 role: 'member'
             });
 
-            const res = await fetch(`/api/admin/members?${queryParams.toString()}`, { headers: getHeaders() });
-            if (res.status === 401) {
-                const logoutBtn = document.getElementById('logout-btn');
-                if (logoutBtn) logoutBtn.click();
+            const res = await window.apiFetch(`/api/admin/members?${queryParams.toString()}`);
+            if (!res || !res.ok) {
+                if (res && res.status !== 401) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger" style="padding: 20px;">Failed to load members.</td></tr>';
+                }
                 return;
             }
 
@@ -49,9 +50,8 @@
             const paginatedData = data.data;
             const membersList = Array.isArray(paginatedData?.data) ? paginatedData.data : [];
 
-            tbody.innerHTML = '';
-
             if (membersList.length > 0) {
+                let rowsHtml = '';
                 membersList.forEach(m => {
                     // Compute status
                     const status = getMemberStatus(m);
@@ -79,7 +79,7 @@
                         avatarHtml = `<img src="/api/profile-photo/${filenamePath}" style="width: 32px; height: 32px; border-radius: 6px; object-fit: cover; flex-shrink: 0;" onerror="this.outerHTML='<div style=\\\'display:flex; width: 32px; height: 32px; align-items:center; justify-content:center; border-radius: 6px; background-color: var(--primary-light); color: var(--primary); flex-shrink: 0; font-weight: 700;\\\'>${m.name.charAt(0).toUpperCase()}</div>'"/>`;
                     }
 
-                    tbody.innerHTML += `
+                    rowsHtml += `
                         <tr>
                             <td>
                                 <div class="user-avatar-group">
@@ -107,6 +107,7 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = rowsHtml;
 
                 // Update pagination controls
                 updatePagination(paginatedData);
@@ -141,52 +142,61 @@
         return 'inactive';
     }
 
-    // Dynamic Member Metrics Loader
+    // Dynamic Member Metrics Loader (Optimized Parallel Fetching)
     async function loadMemberMetrics() {
         try {
-            // Get total count
-            const totalRes = await fetch('/api/admin/members?role=member', { headers: getHeaders() });
-            const totalJson = await totalRes.json();
-            const totalCount = totalJson.data.total || 0;
-            const totalMetric = document.getElementById('members-metric-total');
-            if (totalMetric) totalMetric.textContent = totalCount.toLocaleString();
+            const [totalRes, activeRes, pendingRes, dashRes] = await Promise.all([
+                window.apiFetch('/api/admin/members?role=member&paginate=1'),
+                window.apiFetch('/api/admin/members?status=active&role=member&paginate=1'),
+                window.apiFetch('/api/admin/members?status=pending&role=member&paginate=1'),
+                window.apiFetch('/api/admin/dashboard')
+            ]);
 
-            // Get active count
-            const activeRes = await fetch('/api/admin/members?status=active&role=member', { headers: getHeaders() });
-            const activeJson = await activeRes.json();
-            const activeCount = activeJson.data.total || 0;
-            const activeMetric = document.getElementById('members-metric-active');
-            if (activeMetric) activeMetric.textContent = activeCount.toLocaleString();
+            if (totalRes && totalRes.ok) {
+                const totalJson = await totalRes.json();
+                const totalCount = totalJson.data?.total || 0;
+                const totalMetric = document.getElementById('members-metric-total');
+                if (totalMetric) totalMetric.textContent = totalCount.toLocaleString();
+            }
 
-            // Get pending count
-            const pendingRes = await fetch('/api/admin/members?status=pending&role=member', { headers: getHeaders() });
-            const pendingJson = await pendingRes.json();
-            const pendingCount = pendingJson.data.total || 0;
-            const pendingMetric = document.getElementById('members-metric-pending');
-            if (pendingMetric) pendingMetric.textContent = pendingCount.toLocaleString();
+            if (activeRes && activeRes.ok) {
+                const activeJson = await activeRes.json();
+                const activeCount = activeJson.data?.total || 0;
+                const activeMetric = document.getElementById('members-metric-active');
+                if (activeMetric) activeMetric.textContent = activeCount.toLocaleString();
+            }
 
-            // Get total assets (Collections)
-            const dashRes = await fetch('/api/admin/dashboard', { headers: getHeaders() });
-            const dashJson = await dashRes.json();
-            const assets = dashJson.data.total_collections_formatted || '0';
-            const assetsMetric = document.getElementById('members-metric-assets');
-            if (assetsMetric) assetsMetric.textContent = '₹' + assets;
+            if (pendingRes && pendingRes.ok) {
+                const pendingJson = await pendingRes.json();
+                const pendingCount = pendingJson.data?.total || 0;
+                const pendingMetric = document.getElementById('members-metric-pending');
+                if (pendingMetric) pendingMetric.textContent = pendingCount.toLocaleString();
+            }
 
-            // Dynamically populate community filter with real committees
+            if (dashRes && dashRes.ok) {
+                const dashJson = await dashRes.json();
+                const assets = dashJson.data?.total_collections_formatted || '0';
+                const assetsMetric = document.getElementById('members-metric-assets');
+                if (assetsMetric) assetsMetric.textContent = '₹' + assets;
+            }
+
+            // Dynamically populate community filter with real committees if not already populated
             const commFilter = document.getElementById('member-community-filter');
             if (commFilter && commFilter.options.length <= 1) {
-                const commRes = await fetch('/api/admin/committees', { headers: getHeaders() });
-                const commData = await commRes.json();
-                const committees = Array.isArray(commData?.data?.data)
-                    ? commData.data.data
-                    : (Array.isArray(commData?.data) ? commData.data : []);
-                
-                committees.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.name;
-                    opt.textContent = c.name;
-                    commFilter.appendChild(opt);
-                });
+                const commRes = await window.apiFetch('/api/admin/committees');
+                if (commRes && commRes.ok) {
+                    const commData = await commRes.json();
+                    const committees = Array.isArray(commData?.data?.data)
+                        ? commData.data.data
+                        : (Array.isArray(commData?.data) ? commData.data : []);
+                    
+                    committees.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c.name;
+                        opt.textContent = c.name;
+                        commFilter.appendChild(opt);
+                    });
+                }
             }
 
         } catch (e) {
@@ -304,9 +314,11 @@
         document.getElementById('global-modal').style.display = 'flex';
 
         try {
-            const res = await fetch(`/api/admin/members/${id}`, { headers: getHeaders() });
+            const res = await window.apiFetch(`/api/admin/members/${id}`);
+            if (!res || !res.ok) return;
             const payload = await res.json();
             const m = payload.data;
+            if (!m) return;
 
             document.getElementById('modal-title').textContent = `Member Profile: ${m.name} (#MEM-${m.id})`;
 
@@ -474,10 +486,8 @@
     // Secure KYC doc fetcher
     window.viewKycDocument = async function(userId, filename) {
         try {
-            const res = await fetch(`/api/documents/kyc/${userId}/${filename}`, {
-                headers: getHeaders()
-            });
-            if (!res.ok) {
+            const res = await window.apiFetch(`/api/documents/kyc/${userId}/${filename}`);
+            if (!res || !res.ok) {
                 alert('Failed to load document: Unauthorized or not found.');
                 return;
             }
@@ -499,7 +509,8 @@
     // Load active community options dynamically into filter
     async function loadCommunityFilterOptions() {
         try {
-            const res = await fetch('/api/admin/committees', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/committees');
+            if (!res || !res.ok) return;
             const data = await res.json();
             const select = document.getElementById('member-community-filter');
             if (!select) return;
@@ -529,7 +540,8 @@
     // Impersonate Member
     window.impersonateMember = async function(id) {
         try {
-            const res = await fetch(`/api/admin/members/${id}/impersonate`, { headers: getHeaders() });
+            const res = await window.apiFetch(`/api/admin/members/${id}/impersonate`);
+            if (!res || !res.ok) return;
             const data = await res.json();
             if (res.ok) {
                 localStorage.setItem('member_token', data.token);
@@ -579,11 +591,11 @@
         }
 
         try {
-            const res = await fetch(`/api/admin/members/${id}/change-password`, {
+            const res = await window.apiFetch(`/api/admin/members/${id}/change-password`, {
                 method: 'POST',
-                headers: getHeaders(),
                 body: JSON.stringify({ password: pwd, password_confirmation: confirmPwd })
             });
+            if (!res) return;
 
             if (res.ok) {
                 alert("Password changed successfully.");
@@ -603,10 +615,10 @@
         if (!confirm(`Are you sure you want to delete member "${name}"?`)) return;
 
         try {
-            let res = await fetch(`/api/admin/members/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            let res = await window.apiFetch(`/api/admin/members/${id}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             let data = await res.json();
 
             // Handle member with active financial records
@@ -615,10 +627,10 @@
                     `This member "${name}" has linked financial records (installments, loans, or payouts).\n\nDo you want to FORCE DELETE this member and permanently clean up their associated records?`
                 );
                 if (forceConfirm) {
-                    res = await fetch(`/api/admin/members/${id}?force=true`, {
-                        method: 'DELETE',
-                        headers: getHeaders()
+                    res = await window.apiFetch(`/api/admin/members/${id}?force=true`, {
+                        method: 'DELETE'
                     });
+                    if (!res) return;
                     data = await res.json();
                 } else {
                     return;
@@ -668,8 +680,10 @@
             });
         }
 
-        // Initialize community dropdown options
-        loadCommunityFilterOptions();
+        // Initialize community dropdown options only when authenticated
+        if (typeof window.getAuthToken === 'function' && window.getAuthToken()) {
+            loadCommunityFilterOptions();
+        }
     });
 
 })();

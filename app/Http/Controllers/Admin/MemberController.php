@@ -86,7 +86,9 @@ class MemberController extends Controller
             return DataTables::of($query)->make(true);
         }
 
-        $paginated = $query->paginate(50);
+        $perPage = min((int) $request->input('paginate', $request->input('per_page', 50)), 200);
+        if ($perPage <= 0) $perPage = 50;
+        $paginated = $query->paginate($perPage);
         
         $paginated->through(function ($user) {
             if ($user->hasRole('agent')) {
@@ -242,6 +244,7 @@ class MemberController extends Controller
                 AgentCollection::where('agent_id', $member->id)->delete();
             }
 
+            $member->tokens()->delete();
             $member->delete();
         });
 

@@ -1,7 +1,8 @@
 
     async function loadLotterySettingsData() {
         try {
-            const res = await fetch('/api/admin/lotteries/setting', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/lotteries/setting');
+            if (!res || !res.ok) return;
             const payload = await res.json();
             if (payload.status && payload.data) {
                 const data = payload.data;
@@ -16,7 +17,7 @@
                 }
                 if (descInput) descInput.value = data.grand_draw_description || '';
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Lottery Settings Load Error:', err); }
     }
 
     window.saveLotterySettings = async function(e) {
@@ -30,14 +31,11 @@
         };
         
         try {
-            const res = await fetch('/api/admin/lotteries/setting', {
+            const res = await window.apiFetch('/api/admin/lotteries/setting', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-                },
                 body: JSON.stringify(data)
             });
+            if (!res) return;
             const payload = await res.json();
             if (payload.status) {
                 alert('Lottery settings saved successfully!');
@@ -58,13 +56,15 @@
             winnerDateInput.value = new Date().toISOString().split('T')[0];
         }
         try {
-            const res = await fetch('/api/admin/lotteries', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/lotteries');
+            if (!res || !res.ok) return;
             const payload = await res.json();
             const data = payload.data || [];
             const tbody = document.getElementById('lotteries-tbody');
-            tbody.innerHTML = '';
+            if (!tbody) return;
             
             if(Array.isArray(data) && data.length > 0) {
+                let lotHtml = '';
                 data.forEach(l => {
                     const commName = l.committee ? l.committee.name : 'N/A';
                     const commId = l.committee_id || '';
@@ -78,7 +78,7 @@
                     
                     const prizePool = l.prize_amount ? `₹${parseFloat(l.prize_amount).toLocaleString('en-IN')}` : '₹0';
                     
-                    tbody.innerHTML += `
+                    lotHtml += `
                         <tr style="border-bottom:1px solid #f1f5f9;">
                             <td style="padding:12px 16px; font-size:13px; color:#64748b;">#${l.id}</td>
                             <td style="padding:12px 16px; font-size:13px; font-weight:600; color:#1e293b;">
@@ -95,15 +95,17 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = lotHtml;
             } else {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 30px; color: #888; background: white;">No lottery winners yet.</td></tr>`;
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Lotteries Load Error:', err); }
     }
 
     async function loadPaymentSettingsData() {
         try {
-            const res = await fetch('/api/admin/payment-setting', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/payment-setting');
+            if (!res || !res.ok) return;
             const payload = await res.json();
             if (payload.status && payload.data) {
                 const data = payload.data;
@@ -120,7 +122,7 @@
                     }
                 }
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Payment Settings Load Error:', err); }
     }
 
     // Bind form submit for payment settings
@@ -129,13 +131,11 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             try {
-                const res = await fetch('/api/admin/payment-setting', {
+                const res = await window.apiFetch('/api/admin/payment-setting', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-                    },
                     body: formData
                 });
+                if (!res) return;
                 const payload = await res.json();
                 if (payload.status) {
                     alert('Payment settings saved successfully!');
@@ -153,18 +153,21 @@
     async function loadPayoutsData() {
         try {
             loadPaymentSettingsData();
-            const res = await fetch('/api/admin/payouts', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/payouts');
+            if (!res || !res.ok) return;
             const data = await res.json();
             const tbody = document.getElementById('payouts-tbody');
-            tbody.innerHTML = '';
-            if(Array.isArray(data)) {
+            if (!tbody) return;
+            
+            if(Array.isArray(data) && data.length > 0) {
+                let payHtml = '';
                 data.forEach(p => {
                     const userName = p.user ? p.user.name : p.user_id;
                     const commName = p.committee ? p.committee.name : p.committee_id;
                     const actionBtn = p.status === 'pending' ? `<button class="btn-primary" onclick="payPayout(${p.id})"><i class="fa-solid fa-building-columns"></i> Pay to Bank</button>` : `<span class="badge" class="bg-success"><i class="fa-solid fa-check"></i> Paid on ${p.paid_date}</span>`;
                     const statusColor = p.status === 'pending' ? '#f59e0b' : '#10b981';
 
-                    tbody.innerHTML += `
+                    payHtml += `
                         <tr>
                             <td>#${p.id}</td>
                             <td><strong>${userName}</strong></td>
@@ -177,17 +180,20 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = payHtml;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No payouts found.</td></tr>';
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Payouts Load Error:', err); }
     }
 
     window.payPayout = async function(id) {
         if (!confirm("Are you sure you want to mark this as Paid and transfer to the user's bank?")) return;
         try {
-            const res = await fetch(`/api/admin/payouts/${id}/pay`, {
-                method: 'POST',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/payouts/${id}/pay`, {
+                method: 'POST'
             });
+            if (!res) return;
             const data = await res.json();
             if (res.ok) {
                 alert('Success: ' + data.message);
@@ -215,14 +221,11 @@
         const method = isEditing ? 'PUT' : 'POST';
 
         try {
-            const res = await fetch(url, {
+            const res = await window.apiFetch(url, {
                 method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-                },
                 body: JSON.stringify(data)
             });
+            if (!res) return;
             const payload = await res.json();
             if (payload.status) {
                 alert(isEditing ? 'Lottery winner updated successfully!' : 'Lottery winner added successfully!');
@@ -239,12 +242,15 @@
 
     window.editLotteryWinner = function(id, committeeId, winnerId, drawDate) {
         window.editingLotteryId = id;
-        const titleEl = document.querySelector('#add-lottery-winner-form').previousElementSibling;
+        const titleEl = document.querySelector('#add-lottery-winner-form')?.previousElementSibling;
         if (titleEl) titleEl.textContent = `Edit Lottery Winner #${id}`;
         
-        document.getElementById('winner_committee_id').value = committeeId;
-        document.getElementById('winner_user_id').value = winnerId;
-        document.getElementById('winner_draw_date').value = drawDate;
+        const commInput = document.getElementById('winner_committee_id');
+        if (commInput) commInput.value = committeeId;
+        const userInput = document.getElementById('winner_user_id');
+        if (userInput) userInput.value = winnerId;
+        const drawInput = document.getElementById('winner_draw_date');
+        if (drawInput) drawInput.value = drawDate;
         
         const btn = document.querySelector('#add-lottery-winner-form button[type="submit"]');
         if (btn) {
@@ -253,7 +259,7 @@
         }
         
         let cancelBtn = document.getElementById('cancel-edit-btn');
-        if (!cancelBtn) {
+        if (!cancelBtn && btn) {
             cancelBtn = document.createElement('button');
             cancelBtn.id = 'cancel-edit-btn';
             cancelBtn.type = 'button';
@@ -276,7 +282,7 @@
 
     window.cancelLotteryEdit = function() {
         window.editingLotteryId = null;
-        const titleEl = document.querySelector('#add-lottery-winner-form').previousElementSibling;
+        const titleEl = document.querySelector('#add-lottery-winner-form')?.previousElementSibling;
         if (titleEl) titleEl.textContent = 'Add New Lottery Winner';
         
         const form = document.getElementById('add-lottery-winner-form');
@@ -300,10 +306,10 @@
     window.deleteLotteryWinner = async function(id) {
         if (!confirm('Are you sure you want to delete this lottery winner?')) return;
         try {
-            const res = await fetch(`/api/admin/lotteries/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/lotteries/${id}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             const payload = await res.json();
             if (payload.status) {
                 alert('Lottery winner deleted successfully!');

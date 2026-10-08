@@ -36,7 +36,15 @@
         
         const strokeColor = '#FF7A00';
 
-        if (lineChartInstance) lineChartInstance.destroy();
+        if (lineChartInstance) {
+            lineChartInstance.destroy();
+            lineChartInstance = null;
+        }
+        if (typeof Chart !== 'undefined' && Chart.getChart) {
+            const old = Chart.getChart(ctxLine);
+            if (old) old.destroy();
+        }
+
         lineChartInstance = new Chart(canvasCtx, {
             type: 'line',
             data: {
@@ -95,7 +103,15 @@
             }
         }
 
-        if (doughnutChartInstance) doughnutChartInstance.destroy();
+        if (doughnutChartInstance) {
+            doughnutChartInstance.destroy();
+            doughnutChartInstance = null;
+        }
+        if (typeof Chart !== 'undefined' && Chart.getChart) {
+            const old = Chart.getChart(ctxDoughnut);
+            if (old) old.destroy();
+        }
+
         doughnutChartInstance = new Chart(ctxDoughnut.getContext('2d'), {
             type: 'doughnut',
             data: { 

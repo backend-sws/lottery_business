@@ -2,9 +2,9 @@
     window.loadAgentsView = async function() {
         try {
             // Load Pending Collections
-            const colRes = await fetch('/api/admin/agents/collections?status=pending', { headers: getHeaders() });
+            const colRes = await window.apiFetch('/api/admin/agents/collections?status=pending');
+            if (!colRes || !colRes.ok) return;
             const colJson = await colRes.json();
-            if(colRes.status === 401) { document.getElementById('logout-btn').click(); return; }
             
             const colData = Array.isArray(colJson) 
                 ? colJson 
@@ -16,20 +16,21 @@
 
             const commBody = document.getElementById('agent-pending-committee-collections-tbody');
             const loanBody = document.getElementById('agent-pending-loan-collections-tbody');
-            commBody.innerHTML = '';
-            loanBody.innerHTML = '';
+            if (commBody) commBody.innerHTML = '';
+            if (loanBody) loanBody.innerHTML = '';
             
             let hasComm = false, hasLoan = false;
             let commIndex = 1, loanIndex = 1;
+            let commHtml = '', loanHtml = '';
 
-            if(colData.length > 0) {
+            if (colData.length > 0) {
                 colData.forEach(c => {
                     const agentName = c.agent ? c.agent.name : 'N/A';
                     const memberName = c.member ? c.member.name : 'N/A';
                     if (c.collection_type === 'committee') {
                         hasComm = true;
                         const details = c.installment && c.installment.committee ? c.installment.committee.name : 'Unknown Committee';
-                        commBody.innerHTML += `
+                        commHtml += `
                             <tr>
                                 <td>#${commIndex++}</td>
                                 <td>${agentName}</td>
@@ -48,7 +49,7 @@
                     } else if (c.collection_type === 'loan') {
                         hasLoan = true;
                         const details = c.loan_installment && c.loan_installment.loan ? `Loan #${c.loan_installment.loan.id}` : 'Unknown Loan';
-                        loanBody.innerHTML += `
+                        loanHtml += `
                             <tr>
                                 <td>#${loanIndex++}</td>
                                 <td>${agentName}</td>
@@ -68,8 +69,12 @@
                 });
             }
 
-            if(!hasComm) commBody.innerHTML = '<tr><td colspan="7" class="text-center">No pending committee collections.</td></tr>';
-            if(!hasLoan) loanBody.innerHTML = '<tr><td colspan="7" class="text-center">No pending loan collections.</td></tr>';
+            if (commBody) {
+                commBody.innerHTML = hasComm ? commHtml : '<tr><td colspan="7" class="text-center">No pending committee collections.</td></tr>';
+            }
+            if (loanBody) {
+                loanBody.innerHTML = hasLoan ? loanHtml : '<tr><td colspan="7" class="text-center">No pending loan collections.</td></tr>';
+            }
 
         } catch(err) { 
             console.error(err); 
@@ -84,10 +89,10 @@
     window.approveCollection = async function(id) {
         if(!confirm("Are you sure you want to approve this collection and settle the user's due amount?")) return;
         try {
-            const res = await fetch('/api/admin/agents/collections/' + id + '/approve', {
-                method: 'POST',
-                headers: getHeaders()
+            const res = await window.apiFetch('/api/admin/agents/collections/' + id + '/approve', {
+                method: 'POST'
             });
+            if (!res) return;
             const data = await res.json();
             if(data.status === true || data.status === 'success') {
                 alert(data.message);
@@ -104,10 +109,10 @@
         if (!confirm(`Are you sure you want to delete ${agentLabel}?`)) return;
 
         try {
-            let res = await fetch(`/api/admin/members/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            let res = await window.apiFetch(`/api/admin/members/${id}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             let data = await res.json();
 
             // Handle active records / collections
@@ -116,10 +121,10 @@
                     `This ${agentLabel} has associated collection or target records.\n\nDo you want to FORCE DELETE this agent and clean up their assigned records?`
                 );
                 if (forceConfirm) {
-                    res = await fetch(`/api/admin/members/${id}?force=true`, {
-                        method: 'DELETE',
-                        headers: getHeaders()
+                    res = await window.apiFetch(`/api/admin/members/${id}?force=true`, {
+                        method: 'DELETE'
                     });
+                    if (!res) return;
                     data = await res.json();
                 } else {
                     return;

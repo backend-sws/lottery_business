@@ -28,13 +28,14 @@ class AuthController extends Controller
             return ApiResponse::error('Invalid credentials', 401);
         }
 
-        // Role check (safe way)
-        if ($user->role !== 'admin') {
+        // Role check (support both Spatie Super Admin/admin roles and database column)
+        $isAdmin = ($user->role === 'admin' || $user->hasRole('Super Admin') || $user->hasRole('admin'));
+        if (!$isAdmin) {
             return ApiResponse::error('Unauthorized. Admin only.', 403);
         }
 
-        // Delete old tokens (important security step)
-        $user->tokens()->delete();
+        // Clean up only previous admin tokens to prevent race-condition invalidation across sessions
+        $user->tokens()->where('name', 'admin_token')->delete();
 
         // Create new token
         $token = $user->createToken('admin_token')->plainTextToken;

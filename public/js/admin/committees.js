@@ -3,9 +3,11 @@
         try {
             let url = '/api/admin/committees';
             if (status === 'active') url += '?status=active';
-            const res = await fetch(url, { headers: getHeaders() });
+            const res = await window.apiFetch(url);
+            if (!res || !res.ok) return;
             const data = await res.json();
             const tbody = document.getElementById('committees-tbody');
+            if (!tbody) return;
             const committees = Array.isArray(data?.data?.data)
                 ? data.data.data
                 : (Array.isArray(data?.data)
@@ -13,10 +15,10 @@
                     : (Array.isArray(data)
                         ? data
                         : []));
-            tbody.innerHTML = '';
             if (committees.length > 0) {
+                let commHtml = '';
                 committees.forEach(c => {
-                    tbody.innerHTML += `
+                    commHtml += `
                         <tr>
                             <td>#${c.id}</td>
                             <td><strong>${c.name}</strong></td>
@@ -33,10 +35,11 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = commHtml;
             } else {
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center">No committees found.</td></tr>';
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Load Committees Error:', err); }
     }
 
     window.switchMemberTab = function(tab) {

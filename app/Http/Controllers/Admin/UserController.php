@@ -111,6 +111,7 @@ class UserController extends Controller
                 return ApiResponse::error('You cannot delete yourself');
             }
 
+            $user->tokens()->delete();
             $user->delete();
 
             return ApiResponse::success(null, 'User deleted successfully');

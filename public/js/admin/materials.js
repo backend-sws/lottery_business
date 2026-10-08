@@ -6,10 +6,11 @@
         tbody.innerHTML = '<tr><td colspan="7" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> Loading materials...</td></tr>';
 
         try {
-            const res = await fetch('/api/admin/materials', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/materials');
+            if (!res || !res.ok) return;
             const json = await res.json();
             
-            if (res.ok && json.data) {
+            if (json.data) {
                 let html = '';
                 json.data.forEach(m => {
                     const img = m.image_url 
@@ -36,7 +37,7 @@
                 tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Failed to load materials: ${json.message || 'Error'}</td></tr>`;
             }
         } catch (err) {
-            console.error(err);
+            console.error('Materials Load Error:', err);
             tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Connection error.</td></tr>';
         }
 
@@ -50,10 +51,11 @@
         tbody.innerHTML = '<tr><td colspan="9" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> Loading stocks...</td></tr>';
 
         try {
-            const res = await fetch('/api/admin/material-stocks', { headers: getHeaders() });
+            const res = await window.apiFetch('/api/admin/material-stocks');
+            if (!res || !res.ok) return;
             const json = await res.json();
             
-            if (res.ok && json.data) {
+            if (json.data) {
                 let html = '';
                 json.data.forEach(s => {
                     const userName = s.user ? `<strong>${s.user.name}</strong> (${s.user.email})` : '<span class="text-muted">None</span>';
@@ -85,7 +87,7 @@
                 tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Failed to load stocks: ${json.message || 'Error'}</td></tr>`;
             }
         } catch (err) {
-            console.error(err);
+            console.error('Material Stocks Load Error:', err);
             tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Connection error.</td></tr>';
         }
     };
@@ -93,9 +95,10 @@
     // ----- MODAL OPENERS -----
     window.openEditMaterialModal = async function(id) {
         try {
-            const res = await fetch(`/api/admin/materials/${id}`, { headers: getHeaders() });
+            const res = await window.apiFetch(`/api/admin/materials/${id}`);
+            if (!res || !res.ok) return;
             const json = await res.json();
-            if (res.ok && json.data) {
+            if (json.data) {
                 openModal('edit-material', id);
                 document.getElementById('emat_name').value = json.data.name;
                 document.getElementById('emat_price').value = json.data.price;
@@ -112,9 +115,10 @@
 
     window.openEditMaterialStockModal = async function(id) {
         try {
-            const res = await fetch(`/api/admin/material-stocks/${id}`, { headers: getHeaders() });
+            const res = await window.apiFetch(`/api/admin/material-stocks/${id}`);
+            if (!res || !res.ok) return;
             const json = await res.json();
-            if (res.ok && json.data) {
+            if (json.data) {
                 window.currentStockMaterialId = json.data.material_id || '';
                 window.currentStockUserId = json.data.user_id || '';
                 openModal('edit-material-stock', id);
@@ -135,12 +139,12 @@
     window.deleteMaterial = async function(id) {
         if (!confirm("Are you sure you want to delete this material? This will set related stock records to General/None.")) return;
         try {
-            const res = await fetch(`/api/admin/materials/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/materials/${id}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             const json = await res.json();
-            if (res.ok) {
+            if (json.status || res.ok) {
                 alert('Success: ' + (json.message || 'Material deleted'));
                 loadMaterialsData();
             } else {
@@ -155,12 +159,12 @@
     window.deleteMaterialStock = async function(id) {
         if (!confirm("Are you sure you want to delete this stock transaction record?")) return;
         try {
-            const res = await fetch(`/api/admin/material-stocks/${id}`, {
-                method: 'DELETE',
-                headers: getHeaders()
+            const res = await window.apiFetch(`/api/admin/material-stocks/${id}`, {
+                method: 'DELETE'
             });
+            if (!res) return;
             const json = await res.json();
-            if (res.ok) {
+            if (json.status || res.ok) {
                 alert('Success: ' + (json.message || 'Stock record deleted'));
                 loadMaterialStocksData();
             } else {

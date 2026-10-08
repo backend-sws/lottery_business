@@ -11,7 +11,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
 #[Fillable(['name', 'email', 'password', 'phone', 'address', 'role', 'agent_id', 'id_proof', 'photo', 'aadhar_card', 'pan_card', 'otp', 'otp_expires_at', 'is_phone_verified', 'bank_name', 'bank_account_number', 'bank_ifsc', 'bank_account_type', 'additional_documents'])]
@@ -19,7 +18,7 @@ use Carbon\Carbon;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $appends = ['today_collection', 'target_progress'];
 
@@ -82,6 +81,11 @@ class User extends Authenticatable
 
     public function getTodayCollectionAttribute()
     {
+        // Performance optimization: Only agents have collections. Bypass DB queries for members/admins.
+        if ($this->role !== 'agent' && !($this->relationLoaded('roles') && $this->roles->contains('name', 'agent'))) {
+            return '₹0';
+        }
+
         $sum = $this->agentCollections()
             ->whereDate('created_at', Carbon::today())
             ->where('status', 'approved')
@@ -91,6 +95,11 @@ class User extends Authenticatable
 
     public function getTargetProgressAttribute()
     {
+        // Performance optimization: Only agents have targets. Bypass DB queries for members/admins.
+        if ($this->role !== 'agent' && !($this->relationLoaded('roles') && $this->roles->contains('name', 'agent'))) {
+            return 0;
+        }
+
         $target = $this->agentTargets()
             ->where('status', 'active')
             ->whereDate('start_date', '<=', Carbon::today())

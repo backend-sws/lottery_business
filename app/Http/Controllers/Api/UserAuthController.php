@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Helpers\ApiResponse;
 
 class UserAuthController extends Controller
@@ -39,6 +40,14 @@ class UserAuthController extends Controller
 
     public function register(Request $request)
     {
+        // Purane soft-deleted users ko database se saaf karein taaki duplicate error na aaye
+        if ($request->filled('email')) {
+            DB::table('users')->where('email', $request->email)->whereNotNull('deleted_at')->delete();
+        }
+        if ($request->filled('phone')) {
+            DB::table('users')->where('phone', $request->phone)->whereNotNull('deleted_at')->delete();
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
@@ -63,6 +72,12 @@ class UserAuthController extends Controller
             'user' => $user->load('roles'),
             'token' => $token
         ], 'Account created successfully.');
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return ApiResponse::success(null, 'Logged out successfully.');
     }
 
 }
