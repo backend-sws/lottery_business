@@ -622,9 +622,10 @@
             let data = await res.json();
 
             // Handle member with active financial records
-            if (res.status === 422 && data?.data?.has_financials) {
+            const hasFinancials = res.status === 422 || data?.data?.has_financials || (data?.message && data.message.includes('force=true')) || (data?.message && data.message.includes('financial records'));
+            if (hasFinancials) {
                 const forceConfirm = confirm(
-                    `This member "${name}" has linked financial records (installments, loans, or payouts).\n\nDo you want to FORCE DELETE this member and permanently clean up their associated records?`
+                    `Notice: Member "${name}" has linked financial records (installments, loans, or payouts).\n\nDo you want to FORCE DELETE this member and permanently clean up all their associated records from the system?`
                 );
                 if (forceConfirm) {
                     res = await window.apiFetch(`/api/admin/members/${id}?force=true`, {

@@ -13,11 +13,15 @@ class ApiResponse
         ]);
     }
 
-    public static function error($message = 'Error', $code = 500)
+    public static function error($message = 'Error', $code = 500, $data = null)
     {
-        return response()->json([
+        $payload = [
             'success' => false,
             'message' => $message
-        ], $code);
+        ];
+        if ($data !== null) {
+            $payload['data'] = $data;
+        }
+        return response()->json($payload, $code);
     }
 }

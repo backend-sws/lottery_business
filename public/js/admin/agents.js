@@ -116,9 +116,10 @@
             let data = await res.json();
 
             // Handle active records / collections
-            if (res.status === 422 && data?.data?.has_financials) {
+            const hasFinancials = res.status === 422 || data?.data?.has_financials || (data?.message && data.message.includes('force=true')) || (data?.message && data.message.includes('collection'));
+            if (hasFinancials) {
                 const forceConfirm = confirm(
-                    `This ${agentLabel} has associated collection or target records.\n\nDo you want to FORCE DELETE this agent and clean up their assigned records?`
+                    `Notice: This ${agentLabel} has associated collection or target records.\n\nDo you want to FORCE DELETE this agent and clean up their assigned records?`
                 );
                 if (forceConfirm) {
                     res = await window.apiFetch(`/api/admin/members/${id}?force=true`, {
