@@ -62,8 +62,8 @@
                     <h2 id="agent-metric-collections" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">--</h2>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Monthly Collections</span>
                     <div style="display:flex; align-items:center; gap:4px; margin-top: 4px;">
-                        <i class="fa-solid fa-arrow-trend-up" style="color: var(--success); font-size: 0.7rem;"></i>
-                        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">+8% trend</span>
+                        <i class="fa-solid fa-circle-check" style="color: var(--success); font-size: 0.7rem;"></i>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">Live collections</span>
                     </div>
                 </div>
                 <div class="stat-icon-wrapper" style="background-color: #eff6ff; color: #2563eb; flex-shrink: 0;">
@@ -81,8 +81,8 @@
                     <h2 id="agent-metric-performance" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">0%</h2>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Avg. Target Progress</span>
                     <div style="display:flex; align-items:center; gap:4px; margin-top: 4px;">
-                        <div id="agent-performance-status" style="color: var(--warning); font-size: 0.65rem; font-weight: 700;">
-                            <i class="fa-solid fa-star"></i> Outstanding
+                        <div id="agent-performance-status" style="color: var(--text-muted); font-size: 0.65rem; font-weight: 700;">
+                            <i class="fa-solid fa-chart-simple"></i> --
                         </div>
                     </div>
                 </div>
@@ -217,9 +217,9 @@
         }
     }
     
-    function openAgentManageModal(id) {
+    function openAgentManageModal(id, name = '') {
         modal.style.display = 'flex';
-        modalTitle.textContent = 'Manage Agent #' + id;
+        modalTitle.textContent = (name ? name + ' ' : '') + '(Agent #' + id + ')';
         modalBody.innerHTML = `
             <form id="modal-form" onsubmit="submitForm(event, 'assign-agent-target', ${id})">
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Set up monthly targets for this field agent.</p>
@@ -248,6 +248,15 @@
                 </div>
                 <button type="submit" class="btn-primary" style="width:100%; border-radius: 6px;">Assign Target</button>
             </form>
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #fee2e2; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: #ef4444; font-size: 0.85rem; display: block;">Danger Zone</strong>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Permanently remove this agent account</span>
+                </div>
+                <button type="button" class="btn-secondary text-danger" onclick="deleteAgent(${id}, '${name ? name.replace(/'/g, "\\'") : ''}')" style="padding: 7px 14px; font-size: 0.8rem; font-weight: 600; background: #fef2f2; border: 1px solid #fecaca; color: #ef4444; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-trash-can"></i> Delete Agent
+                </button>
+            </div>
         `;
         
         // Auto-fill dates

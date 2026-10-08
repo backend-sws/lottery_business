@@ -38,7 +38,10 @@
                                 <td class="text-success">₹${parseFloat(c.amount_collected).toFixed(2)}</td>
                                 <td>${new Date(c.collected_at).toLocaleDateString()}</td>
                                 <td>
-                                    <button class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="approveCollection(${c.id})">Approve</button>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <button class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="approveCollection(${c.id})">Approve</button>
+                                        <button class="btn-secondary text-danger" style="padding: 5px 8px; font-size: 0.8rem; background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; border-radius: 5px; cursor: pointer;" onclick="deleteCollectionFromOverview(${c.id})" title="Delete Collection"><i class="fa-solid fa-trash-can"></i></button>
+                                    </div>
                                 </td>
                             </tr>
                         `;
@@ -54,7 +57,10 @@
                                 <td class="text-success">₹${parseFloat(c.amount_collected).toFixed(2)}</td>
                                 <td>${new Date(c.collected_at).toLocaleDateString()}</td>
                                 <td>
-                                    <button class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="approveCollection(${c.id})">Approve</button>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <button class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;" onclick="approveCollection(${c.id})">Approve</button>
+                                        <button class="btn-secondary text-danger" style="padding: 5px 8px; font-size: 0.8rem; background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; border-radius: 5px; cursor: pointer;" onclick="deleteCollectionFromOverview(${c.id})" title="Delete Collection"><i class="fa-solid fa-trash-can"></i></button>
+                                    </div>
                                 </td>
                             </tr>
                         `;
@@ -90,4 +96,52 @@
                 alert(data.message || "Failed to approve. Please try again or re-login.");
             }
         } catch(err) { console.error(err); alert("An error occurred: " + err.message); }
-    }
+    };
+
+    // Delete Agent Functionality
+    window.deleteAgent = async function(id, name) {
+        const agentLabel = name ? `agent "${name}"` : `Agent #${id}`;
+        if (!confirm(`Are you sure you want to delete ${agentLabel}?`)) return;
+
+        try {
+            let res = await fetch(`/api/admin/members/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            let data = await res.json();
+
+            // Handle active records / collections
+            if (res.status === 422 && data?.data?.has_financials) {
+                const forceConfirm = confirm(
+                    `This ${agentLabel} has associated collection or target records.\n\nDo you want to FORCE DELETE this agent and clean up their assigned records?`
+                );
+                if (forceConfirm) {
+                    res = await fetch(`/api/admin/members/${id}?force=true`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    });
+                    data = await res.json();
+                } else {
+                    return;
+                }
+            }
+
+            if (res.ok) {
+                alert(data.message || 'Agent deleted successfully');
+                if (typeof closeModal === 'function') {
+                    closeModal();
+                }
+                if (typeof loadAgentsList === 'function') {
+                    loadAgentsList();
+                }
+                if (typeof loadAgentsView === 'function') {
+                    loadAgentsView();
+                }
+            } else {
+                alert('Error: ' + (data.message || 'Failed to delete agent'));
+            }
+        } catch (err) {
+            console.error("Error deleting agent:", err);
+            alert("An error occurred while deleting agent.");
+        }
+    };

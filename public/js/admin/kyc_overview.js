@@ -195,19 +195,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         const time = dateStr ? new Date(dateStr).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true}) : '--';
                         const dateFormatted = dateStr ? new Date(dateStr).toLocaleDateString('en-IN', {day: '2-digit', month: 'short'}) : '';
                         
-                        // Status / action column
-                        let actionHtml = '';
+                        // Status badge
+                        let statusBadge = '';
                         if (c.status === 'approved') {
-                            actionHtml = `<span class="badge badge-success" style="padding:3px 8px; font-size:0.7rem;">Approved</span>`;
+                            statusBadge = `<span class="badge badge-success" style="padding:3px 8px; font-size:0.7rem; text-transform:capitalize;"><i class="fa-solid fa-circle-check" style="font-size:0.65rem; margin-right:3px;"></i>Approved</span>`;
                         } else if (c.status === 'pending') {
+                            statusBadge = `<span class="badge badge-pending" style="padding:3px 8px; font-size:0.7rem; text-transform:capitalize;"><i class="fa-solid fa-clock" style="font-size:0.65rem; margin-right:3px;"></i>Pending</span>`;
+                        } else if (c.status === 'rejected') {
+                            statusBadge = `<span class="badge badge-failed" style="padding:3px 8px; font-size:0.7rem; text-transform:capitalize;"><i class="fa-solid fa-circle-xmark" style="font-size:0.65rem; margin-right:3px;"></i>Rejected</span>`;
+                        } else {
+                            statusBadge = `<span class="badge badge-neutral" style="padding:3px 8px; font-size:0.7rem; text-transform:capitalize;">${c.status || 'N/A'}</span>`;
+                        }
+
+                        // Action buttons with Delete
+                        let actionHtml = '';
+                        if (c.status === 'pending') {
                             actionHtml = `
-                                <div style="display:flex; gap:6px;">
-                                    <button class="btn-primary" style="padding:4px 10px; font-size:0.75rem; background-color: var(--accent); border-radius:5px;" onclick="approveCollectionFromOverview(${c.id})">Approve</button>
-                                    <button class="btn-secondary text-danger" style="padding:4px 10px; font-size:0.75rem; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.15); border-radius:5px;" onclick="rejectCollectionFromOverview(${c.id})">Reject</button>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <button class="btn-primary" style="padding:4px 9px; font-size:0.75rem; background-color: var(--accent); border-radius:5px; cursor:pointer;" onclick="approveCollectionFromOverview(${c.id})">Approve</button>
+                                    <button class="btn-secondary" style="padding:4px 9px; font-size:0.75rem; background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:5px; cursor:pointer;" onclick="rejectCollectionFromOverview(${c.id})">Reject</button>
+                                    <button class="btn-secondary text-danger" style="padding:4px 8px; font-size:0.75rem; background:#fef2f2; border:1px solid #fca5a5; color:#ef4444; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="deleteCollectionFromOverview(${c.id})" title="Delete Collection">
+                                        <i class="fa-solid fa-trash-can"></i> Delete
+                                    </button>
                                 </div>
                             `;
-                        } else if (c.status === 'rejected') {
-                            actionHtml = `<span class="badge badge-failed" style="padding:3px 8px; font-size:0.7rem;">Rejected</span>`;
+                        } else {
+                            actionHtml = `
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <button class="btn-secondary text-danger" style="padding:4px 9px; font-size:0.75rem; background:#fef2f2; border:1px solid #fca5a5; color:#ef4444; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="deleteCollectionFromOverview(${c.id})" title="Delete Collection">
+                                        <i class="fa-solid fa-trash-can"></i> Delete
+                                    </button>
+                                </div>
+                            `;
                         }
 
                         // Method badge color
@@ -231,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td class="font-semibold">₹${amount}</td>
                                 <td><span class="badge ${methodBadge}" style="text-transform:capitalize;">${method}</span></td>
                                 <td><span style="font-size:0.8rem;">${dateFormatted}</span> <span style="font-size:0.7rem;color:var(--text-muted);">${time}</span></td>
+                                <td>${statusBadge}</td>
                                 <td>${actionHtml}</td>
                             </tr>
                         `;
@@ -239,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (countElem) countElem.textContent = 'No collections found';
                     collTbody.innerHTML = `
                         <tr>
-                            <td colspan="6" style="text-align:center; padding:40px 20px; color:var(--text-muted);">
+                            <td colspan="7" style="text-align:center; padding:40px 20px; color:var(--text-muted);">
                                 <i class="fa-solid fa-inbox" style="font-size:2rem; margin-bottom:8px; display:block; opacity:0.4;"></i>
                                 No collection records found yet. Collections will appear here once agents start collecting.
                             </td>
@@ -480,7 +500,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             </td>
                             <td><span class="badge ${badgeClass}">${statusText}</span></td>
                             <td>
-                                <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAgentManageModal(${a.id})">Manage</button>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.8rem; font-weight:600; color:var(--primary); background:#f8fafc; border:1px solid var(--border-color); border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="openAgentManageModal(${a.id}, '${a.name.replace(/'/g, "\\'")}')">
+                                        <i class="fa-solid fa-gear"></i> Manage
+                                    </button>
+                                    <button class="btn-secondary text-danger" onclick="deleteAgent(${a.id}, '${a.name.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 0.8rem; font-weight: 600; color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Delete Agent">
+                                        <i class="fa-solid fa-trash-can"></i> Delete
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -544,6 +571,31 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error(e);
             alert('An error occurred');
+        }
+    };
+
+    window.deleteCollectionFromOverview = async function(id) {
+        if (!confirm('Are you sure you want to delete this collection record? This action cannot be undone.')) return;
+        try {
+            const res = await fetch(`/api/admin/agents/collections/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            const data = await res.json();
+            if (data.status) {
+                alert(data.message || 'Collection deleted successfully!');
+                if (typeof loadCollectionsOverviewData === 'function') {
+                    loadCollectionsOverviewData();
+                }
+                if (typeof loadAgentsView === 'function') {
+                    loadAgentsView();
+                }
+            } else {
+                alert(data.message || 'Failed to delete collection');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('An error occurred: ' + e.message);
         }
     };
 

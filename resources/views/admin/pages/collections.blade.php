@@ -156,12 +156,13 @@
                         <th>Method</th>
                         <th>Time</th>
                         <th>Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="collections-table-tbody">
                     <!-- Populated dynamically by JS -->
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:30px 20px; color:var(--text-muted);">
+                        <td colspan="7" style="text-align:center; padding:30px 20px; color:var(--text-muted);">
                             <i class="fa-solid fa-spinner fa-spin" style="font-size:1.2rem; margin-bottom:6px; display:block; opacity:0.5;"></i>
                             Loading collection data...
                         </td>

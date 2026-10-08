@@ -95,7 +95,14 @@
                             <td class="font-semibold">${formattedInvestment}</td>
                             <td><span class="badge ${badgeClass}" style="text-transform: capitalize;">${status}</span></td>
                             <td>
-                                <a href="javascript:void(0)" onclick="viewMemberDetails(${m.id})" style="font-size: 0.85rem; font-weight: 700; color: var(--primary); text-decoration: none;">View Details</a>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button class="btn-secondary" onclick="viewMemberDetails(${m.id})" style="padding: 4px 8px; font-size: 0.8rem; font-weight: 600; color: var(--primary); background: #f8fafc; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="fa-solid fa-eye"></i> View
+                                    </button>
+                                    <button class="btn-secondary text-danger" onclick="deleteMember(${m.id}, '${m.name.replace(/'/g, "\\'")}')" style="padding: 4px 8px; font-size: 0.8rem; font-weight: 600; color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="Delete Member">
+                                        <i class="fa-solid fa-trash-can"></i> Delete
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `;
@@ -164,6 +171,23 @@
             const assets = dashJson.data.total_collections_formatted || '0';
             const assetsMetric = document.getElementById('members-metric-assets');
             if (assetsMetric) assetsMetric.textContent = '₹' + assets;
+
+            // Dynamically populate community filter with real committees
+            const commFilter = document.getElementById('member-community-filter');
+            if (commFilter && commFilter.options.length <= 1) {
+                const commRes = await fetch('/api/admin/committees', { headers: getHeaders() });
+                const commData = await commRes.json();
+                const committees = Array.isArray(commData?.data?.data)
+                    ? commData.data.data
+                    : (Array.isArray(commData?.data) ? commData.data : []);
+                
+                committees.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = c.name;
+                    commFilter.appendChild(opt);
+                });
+            }
 
         } catch (e) {
             console.error("Error loading metrics in members:", e);
@@ -307,9 +331,10 @@
                                 <p style="font-size:0.8rem; color:var(--text-muted); margin:4px 0 0 0;">Role: <span class="badge" style="background:#e0f2fe; color:#0369a1; text-transform:uppercase; font-size:0.65rem; font-weight:700; padding:2px 6px;">${m.roles && m.roles[0] ? m.roles[0].name : 'member'}</span></p>
                             </div>
                         </div>
-                        <div style="display:flex; gap:8px;">
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             <button class="btn-primary" onclick="impersonateMember(${m.id})" style="padding: 8px 14px; font-size:0.8rem; border-radius:6px;"><i class="fa-solid fa-user-ninja"></i> Login as User</button>
                             <button class="btn-secondary" onclick="openChangePasswordModal(${m.id}, '${m.name.replace(/'/g, "\\'")}')" style="padding: 8px 14px; font-size:0.8rem; border-radius:6px;"><i class="fa-solid fa-key"></i> Reset Password</button>
+                            <button class="btn-secondary text-danger" onclick="deleteMember(${m.id}, '${m.name.replace(/'/g, "\\'")}')" style="padding: 8px 14px; font-size:0.8rem; border-radius:6px; background:#fef2f2; border:1px solid #fecaca; color:#ef4444;"><i class="fa-solid fa-trash-can"></i> Delete Member</button>
                         </div>
                     </div>
 
@@ -570,6 +595,48 @@
         } catch (err) {
             console.error(err);
             alert("An error occurred.");
+        }
+    };
+
+    // Delete Member
+    window.deleteMember = async function(id, name) {
+        if (!confirm(`Are you sure you want to delete member "${name}"?`)) return;
+
+        try {
+            let res = await fetch(`/api/admin/members/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            let data = await res.json();
+
+            // Handle member with active financial records
+            if (res.status === 422 && data?.data?.has_financials) {
+                const forceConfirm = confirm(
+                    `This member "${name}" has linked financial records (installments, loans, or payouts).\n\nDo you want to FORCE DELETE this member and permanently clean up their associated records?`
+                );
+                if (forceConfirm) {
+                    res = await fetch(`/api/admin/members/${id}?force=true`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    });
+                    data = await res.json();
+                } else {
+                    return;
+                }
+            }
+
+            if (res.ok) {
+                alert(data.message || 'Member deleted successfully');
+                if (typeof closeModal === 'function') {
+                    closeModal();
+                }
+                loadMembersData(currentPage);
+            } else {
+                alert('Error: ' + (data.message || 'Failed to delete member'));
+            }
+        } catch (err) {
+            console.error("Error deleting member:", err);
+            alert("An error occurred while deleting member.");
         }
     };
 

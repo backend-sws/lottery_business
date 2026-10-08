@@ -26,11 +26,11 @@
             <div class="shape-circle-3"></div>
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; position: relative; z-index: 1;">
                 <div class="flex-column" style="gap: 2px; flex: 1; min-width: 0;">
-                    <h2 id="members-metric-total" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">12,482</h2>
+                    <h2 id="members-metric-total" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">--</h2>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Total Members</span>
                     <div style="display:flex; align-items:center; gap:4px; margin-top: 4px;">
-                        <i class="fa-solid fa-arrow-trend-up" style="color: var(--success); font-size: 0.7rem;"></i>
-                        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">+4% vs yesterday</span>
+                        <i class="fa-solid fa-circle-check" style="color: var(--success); font-size: 0.7rem;"></i>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">Live registered</span>
                     </div>
                 </div>
                 <div class="stat-icon-wrapper" style="background-color: var(--primary-light); color: var(--primary); flex-shrink: 0;">
@@ -46,10 +46,10 @@
             <div class="shape-circle-3"></div>
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; position: relative; z-index: 1;">
                 <div class="flex-column" style="gap: 2px; flex: 1; min-width: 0;">
-                    <h2 id="members-metric-active" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">8,921</h2>
+                    <h2 id="members-metric-active" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">--</h2>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Active Now</span>
                     <div style="display:flex; align-items:center; gap:4px; margin-top: 4px;">
-                        <span class="badge" style="background-color: #f3e8ff; color: #7c3aed; padding: 1px 6px; font-size: 0.6rem; border-radius: 4px; font-weight: 700;">Stable</span>
+                        <span class="badge" style="background-color: #f3e8ff; color: #7c3aed; padding: 1px 6px; font-size: 0.6rem; border-radius: 4px; font-weight: 700;">Active</span>
                     </div>
                 </div>
                 <div class="stat-icon-wrapper" style="background-color: #f3e8ff; color: #7c3aed; flex-shrink: 0;">
@@ -65,7 +65,7 @@
             <div class="shape-circle-3"></div>
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; position: relative; z-index: 1;">
                 <div class="flex-column" style="gap: 2px; flex: 1; min-width: 0;">
-                    <h2 id="members-metric-pending" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">143</h2>
+                    <h2 id="members-metric-pending" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">--</h2>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Pending Approval</span>
                     <div style="display:flex; align-items:center; gap:4px; margin-top: 4px;">
                         <span class="badge badge-failed" style="padding: 1px 6px; font-size: 0.6rem; border-radius: 4px; font-weight: 700;">Action Required</span>
@@ -84,11 +84,11 @@
             <div class="shape-circle-3"></div>
             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; position: relative; z-index: 1;">
                 <div class="flex-column" style="gap: 2px; flex: 1; min-width: 0;">
-                    <h2 id="members-metric-assets" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">$4.2M</h2>
+                    <h2 id="members-metric-assets" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">₹0</h2>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Total Assets</span>
                     <div style="display:flex; align-items:center; gap:4px; margin-top: 4px;">
                         <i class="fa-solid fa-arrow-trend-up" style="color: var(--success); font-size: 0.7rem;"></i>
-                        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">+12% vs last month</span>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">Live collections</span>
                     </div>
                 </div>
                 <div class="stat-icon-wrapper" style="background-color: var(--success-bg); color: var(--success); flex-shrink: 0;">
@@ -113,9 +113,6 @@
             </div>
             <select class="filter-select" id="member-community-filter">
                 <option value="">All Communities</option>
-                <option value="Tech Hub East">Tech Hub East</option>
-                <option value="Pacific Investors">Pacific Investors</option>
-                <option value="Euro Green Group">Euro Green Group</option>
             </select>
             <select class="filter-select" id="member-status-filter">
                 <option value="">All Statuses</option>
@@ -165,7 +162,7 @@
             <div>
                 <h4 style="color:#ffffff; opacity: 1; font-size: 0.95rem; font-weight:700;">Member Growth Insights</h4>
                 <p style="margin-top: 12px; font-size: 0.85rem; line-height: 1.5; color: #e6f4f1; opacity:0.9;">
-                    You've seen a 12% increase in new member registrations this month compared to last. Consider reviewing the "Pending Approval" queue to maintain onboarding momentum.
+                    Monitor live member registrations and community enrollments. Review the "Pending Approval" queue regularly to maintain active onboarding momentum.
                 </p>
             </div>
             <button class="btn-secondary" style="background-color: #ffffff; color: var(--primary); font-weight: 700; width: 100%; border: none; margin-top:24px; border-radius: 6px;" onclick="alert('Opening growth report...')">Review Growth Report</button>

@@ -4,12 +4,20 @@
         const ctxLine = document.getElementById('lineChart');
         if (!ctxLine) return;
         
-        let labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        let dataVals = [2.1, 3.4, 2.8, 5.2, 4.5, 5.5]; // in Crores or standard values
+        let labels = [];
+        let dataVals = [];
         
         if (trends && Array.isArray(trends) && trends.length > 0) {
             labels = trends.map(t => t.month);
             dataVals = trends.map(t => t.total);
+        } else {
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const curDate = new Date();
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(curDate.getFullYear(), curDate.getMonth() - i, 1);
+                labels.push(monthNames[d.getMonth()]);
+                dataVals.push(0);
+            }
         }
 
         const isDarkTheme = document.body.classList.contains('dark-theme');
@@ -35,7 +43,7 @@
                 labels: labels,
                 datasets: [
                     { 
-                        label: 'Collections (in Lakhs)', 
+                        label: 'Collections (in Lakhs ₹)', 
                         data: dataVals, 
                         borderColor: strokeColor,
                         backgroundColor: gradient,
@@ -72,19 +80,29 @@
         const ctxDoughnut = document.getElementById('doughnutChart');
         if (!ctxDoughnut) return;
 
-        let doughnutData = [70, 20, 10];
+        let doughnutData = [0, 0, 0];
+        let doughnutLabels = ['Active Members', 'Pending / KYC', 'Inactive'];
         if (distribution) {
-            doughnutData = [distribution.urban || 70, distribution.rural || 20, distribution.unmapped || 10];
+            const activeVal = Number(distribution.active || 0);
+            const pendingVal = Number(distribution.pending || 0);
+            const inactiveVal = Number(distribution.inactive || 0);
+
+            if (activeVal === 0 && pendingVal === 0 && inactiveVal === 0) {
+                doughnutData = [1];
+                doughnutLabels = ['No Data Yet'];
+            } else {
+                doughnutData = [activeVal, pendingVal, inactiveVal];
+            }
         }
 
         if (doughnutChartInstance) doughnutChartInstance.destroy();
         doughnutChartInstance = new Chart(ctxDoughnut.getContext('2d'), {
             type: 'doughnut',
             data: { 
-                labels: ['Urban Centres', 'Rural Clusters', 'Unmapped'], 
+                labels: doughnutLabels, 
                 datasets: [{ 
                     data: doughnutData, 
-                    backgroundColor: ['#004d40', '#10b981', '#cbd5e1'], 
+                    backgroundColor: doughnutLabels.length === 1 ? ['#cbd5e1'] : ['#004d40', '#10b981', '#cbd5e1'], 
                     borderWidth: 0, 
                     hoverOffset: 4 
                 }] 

@@ -74,7 +74,11 @@ class MemberController extends Controller
         if ($request->filled('community')) {
             $community = $request->input('community');
             $query->whereHas('committees', function($q) use ($community) {
-                $q->where('name', $community);
+                if (is_numeric($community)) {
+                    $q->where('committees.id', $community);
+                } else {
+                    $q->where('committees.name', 'like', "%{$community}%");
+                }
             });
         }
 
@@ -166,22 +170,80 @@ class MemberController extends Controller
     | ❌ DELETE MEMBER
     |--------------------------------------------------------------------------
     */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $this->authorize('delete', User::class);
 
         $member = User::findOrFail($id);
+        $isAgent = $member->hasRole('agent');
         
-        // Prevent deletion if they have financial records
-        if ($member->installments()->exists() || $member->loans()->exists() || $member->payouts()->exists()) {
-            return ApiResponse::error('Cannot delete member with financial records (installments/loans). Please resolve their accounts first.', 400);
+        $force = filter_var($request->query('force', $request->input('force', false)), FILTER_VALIDATE_BOOLEAN);
+
+        $hasAgentRecords = $isAgent && (
+            AgentCollection::where('agent_id', $member->id)->exists() ||
+            AgentTarget::where('agent_id', $member->id)->exists()
+        );
+
+        $hasFinancials = $member->installments()->exists() 
+            || $member->loans()->exists() 
+            || $member->payouts()->exists()
+            || $hasAgentRecords;
+
+        if ($hasFinancials && !$force) {
+            $msg = $isAgent
+                ? 'This agent has associated collection or target records. Pass force=true to delete.'
+                : 'This member has existing financial records (installments, loans, or payouts). Pass force=true to delete.';
+
+            return ApiResponse::error(
+                $msg,
+                422,
+                ['has_financials' => true]
+            );
         }
 
-        $member->delete(); // This will now Soft Delete because we added the SoftDeletes trait
+        DB::transaction(function () use ($member, $force) {
+            // Detach joined committees
+            $member->committees()->detach();
+
+            // Unset collector from installments
+            Installment::where('collected_by', $member->id)->update(['collected_by' => null]);
+            if (class_exists(\App\Models\LoanInstallment::class)) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('loan_installments', 'collected_by')) {
+                    \App\Models\LoanInstallment::where('collected_by', $member->id)->update(['collected_by' => null]);
+                }
+            }
+
+            if ($force) {
+                // Delete collections related to this user (as member or agent)
+                AgentCollection::where('member_id', $member->id)
+                    ->orWhere('agent_id', $member->id)
+                    ->delete();
+                
+                // Delete targets
+                AgentTarget::where('agent_id', $member->id)->delete();
+
+                // Delete installments and loans
+                $member->installments()->delete();
+                foreach ($member->loans as $loan) {
+                    $loan->installments()->delete();
+                    $loan->delete();
+                }
+                $member->payouts()->delete();
+                $member->notifications()->delete();
+                if (class_exists(\App\Models\UserTransaction::class)) {
+                    \App\Models\UserTransaction::where('user_id', $member->id)->delete();
+                }
+            } else {
+                AgentTarget::where('agent_id', $member->id)->delete();
+                AgentCollection::where('agent_id', $member->id)->delete();
+            }
+
+            $member->delete();
+        });
 
         return ApiResponse::success(
             null,
-            'Member deleted successfully'
+            $isAgent ? 'Agent deleted successfully' : 'Member deleted successfully'
         );
     }
 

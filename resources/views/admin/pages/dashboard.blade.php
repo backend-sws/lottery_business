@@ -25,15 +25,15 @@
 
         <div class="hero-stats-group">
             <div class="hero-stat-box">
-                <div class="hero-stat-box-num">--</div>
+                <div class="hero-stat-box-num" id="hero-modules-count">--</div>
                 <div class="hero-stat-box-lbl">Modules</div>
             </div>
             <div class="hero-stat-box">
-                <div class="hero-stat-box-num">--</div>
+                <div class="hero-stat-box-num" id="hero-controls-count">--</div>
                 <div class="hero-stat-box-lbl">Controls</div>
             </div>
             <div class="hero-stat-box" style="background-color: var(--success-bg); border-color: rgba(16,185,129,0.2);">
-                <div class="hero-stat-box-num" style="color: var(--success); display:flex; align-items:center; justify-content:center; gap:3px;">
+                <div class="hero-stat-box-num" id="hero-today-collections" style="color: var(--success); display:flex; align-items:center; justify-content:center; gap:3px;">
                     <i class="fa-solid fa-bolt" style="font-size:0.85rem;"></i> --
                 </div>
                 <div class="hero-stat-box-lbl" style="color: #065f46;">Collections</div>
@@ -54,8 +54,8 @@
                     <h2 id="dash-disbursements" style="font-size: 1.5rem; font-weight: 700; color: #111827; line-height: 1.1;">--</h2>
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Total Disbursement</span>
                     <div style="display:flex; align-items:center; gap:4px; margin-top: 4px;">
-                        <i class="fa-solid fa-arrow-trend-up" style="color: var(--success); font-size: 0.7rem;"></i>
-                        <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">+12% vs last month</span>
+                        <i class="fa-solid fa-circle-check" style="color: var(--success); font-size: 0.7rem;"></i>
+                        <span id="dash-disbursement-sub" style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">Live data</span>
                     </div>
                 </div>
                 <div class="stat-icon-wrapper" style="background-color: var(--primary-light); color: var(--primary); flex-shrink: 0;">
@@ -221,40 +221,9 @@
                         </thead>
                         <tbody id="dashboard-transactions-tbody">
                             <tr>
-                                <td>
-                                    <div class="user-avatar-group">
-                                        <div style="background-color: var(--primary-light); color: var(--primary); font-weight:700; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:0.8rem;">AS</div>
-                                        <span class="user-detail-name">Aditi Sharma</span>
-                                    </div>
+                                <td colspan="5" class="text-center" style="padding: 24px; color: var(--text-muted);">
+                                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Loading recent transactions...
                                 </td>
-                                <td>#TRN-90231</td>
-                                <td>Loan Repayment</td>
-                                <td class="font-semibold">₹12,400</td>
-                                <td><span class="badge badge-success">Success</span></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-avatar-group">
-                                        <div style="background-color: #f3e8ff; color: #7c3aed; font-weight:700; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:0.8rem;">RJ</div>
-                                        <span class="user-detail-name">Rahul Jain</span>
-                                    </div>
-                                </td>
-                                <td>#TRN-90232</td>
-                                <td>Disbursement</td>
-                                <td class="font-semibold">₹2,50,000</td>
-                                <td><span class="badge badge-pending">Pending</span></td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="user-avatar-group">
-                                        <div style="background-color: #eff6ff; color: #2563eb; font-weight:700; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; font-size:0.8rem;">MK</div>
-                                        <span class="user-detail-name">Meera Kumari</span>
-                                    </div>
-                                </td>
-                                <td>#TRN-90233</td>
-                                <td>Processing Fee</td>
-                                <td class="font-semibold">₹500</td>
-                                <td><span class="badge badge-success">Success</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -274,18 +243,18 @@
                 <div class="chart-wrapper" style="height: 180px;">
                     <canvas id="doughnutChart"></canvas>
                     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-                        <div style="font-size: 1.35rem; font-weight: 700; color: #0f172a; line-height: 1;" id="dist-total-val">12.4K</div>
+                        <div style="font-size: 1.35rem; font-weight: 700; color: #0f172a; line-height: 1;" id="dist-total-val">--</div>
                         <div style="font-size: 0.6rem; font-weight: 600; color: #64748b; margin-top: 4px; letter-spacing: 0.05em;">TOTAL</div>
                     </div>
                 </div>
                 <div class="flex-column gap-12" style="margin-top: 28px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
-                        <span style="display:flex; align-items:center; gap:8px; font-weight: 600; color: #374151;"><i class="fa-solid fa-circle" style="color: #004d40; font-size:0.7rem;"></i> Urban Centres</span>
-                        <span class="font-semibold" style="color: #111827;">70%</span>
+                        <span style="display:flex; align-items:center; gap:8px; font-weight: 600; color: #374151;"><i class="fa-solid fa-circle" style="color: #004d40; font-size:0.7rem;"></i> Active Members</span>
+                        <span class="font-semibold" id="dist-pct-active" style="color: #111827;">--%</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
-                        <span style="display:flex; align-items:center; gap:8px; font-weight: 600; color: #374151;"><i class="fa-solid fa-circle" style="color: #10b981; font-size:0.7rem;"></i> Rural Clusters</span>
-                        <span class="font-semibold" style="color: #111827;">20%</span>
+                        <span style="display:flex; align-items:center; gap:8px; font-weight: 600; color: #374151;"><i class="fa-solid fa-circle" style="color: #10b981; font-size:0.7rem;"></i> Pending / KYC</span>
+                        <span class="font-semibold" id="dist-pct-pending" style="color: #111827;">--%</span>
                     </div>
                 </div>
             </div>
@@ -300,45 +269,9 @@
                     <i class="fa-regular fa-clock" style="color: var(--text-muted); opacity: 0.5;"></i>
                 </div>
                 
-                <div class="activity-list">
-                    <div class="activity-item">
-                        <div class="activity-icon-box" style="background-color: var(--success-bg); color: var(--success);">
-                            <i class="fa-regular fa-circle-check"></i>
-                        </div>
-                        <div class="activity-details">
-                            <div class="activity-title">Installment #1042 approved</div>
-                        </div>
-                        <div class="activity-time">2 min ago</div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-icon-box" style="background-color: var(--primary-light); color: var(--primary);">
-                            <i class="fa-solid fa-user-plus"></i>
-                        </div>
-                        <div class="activity-details">
-                            <div class="activity-title">New member #MEM-90210 registered</div>
-                        </div>
-                        <div class="activity-time">14 min ago</div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-icon-box" style="background-color: var(--warning-bg); color: var(--warning);">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </div>
-                        <div class="activity-details">
-                            <div class="activity-title">Overdue alert — Member Arjun</div>
-                        </div>
-                        <div class="activity-time">1 hr ago</div>
-                    </div>
-
-                    <div class="activity-item">
-                        <div class="activity-icon-box" style="background-color: #f3e8ff; color: #7c3aed;">
-                            <i class="fa-solid fa-receipt"></i>
-                        </div>
-                        <div class="activity-details">
-                            <div class="activity-title">Payout report generated</div>
-                        </div>
-                        <div class="activity-time">3 hr ago</div>
+                <div class="activity-list" id="dashboard-activity-list">
+                    <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.85rem;">
+                        <i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> Loading recent activity...
                     </div>
                 </div>
             </div>
@@ -347,21 +280,21 @@
             <div class="panel-card" style="margin-bottom:0;">
                 <div class="panel-card-header">
                     <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #374151;">Priority Tasks</h3>
-                    <span style="background-color: #ef4444; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">12</span>
+                    <span id="priority-tasks-total" style="background-color: #ef4444; color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">0</span>
                 </div>
                 <div class="flex-column" style="gap: 10px;">
                     <div class="task-item warning">
                         <div class="task-item-header">
                             <span class="task-title" style="color: #2563eb;">KYC Verifications</span>
                         </div>
-                        <span class="task-desc">8 applications pending review for field agents.</span>
+                        <span class="task-desc" id="priority-kyc-desc">Loading pending verifications...</span>
                     </div>
 
                     <div class="task-item danger">
                         <div class="task-item-header">
-                            <span class="task-title" style="color: #c53030;">Overdue Loans</span>
+                            <span class="task-title" style="color: #c53030;">Overdue Accounts</span>
                         </div>
-                        <span class="task-desc">4 accounts marked as critical.</span>
+                        <span class="task-desc" id="priority-overdue-desc">Loading overdue accounts...</span>
                     </div>
                 </div>
             </div>

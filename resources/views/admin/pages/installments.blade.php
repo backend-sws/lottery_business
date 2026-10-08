@@ -28,6 +28,7 @@
                                     <th>Amount</th>
                                     <th>Paid Date</th>
                                     <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="installments-tbody"></tbody>
@@ -45,6 +46,7 @@
                                     <th>Amount</th>
                                     <th>Paid Date</th>
                                     <th>Status</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="loan-installments-tbody"></tbody>

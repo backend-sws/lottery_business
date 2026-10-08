@@ -1,8 +1,26 @@
 
+    function updateAdminProfileHeader() {
+        try {
+            const userStr = localStorage.getItem('admin_user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                const nameEl = document.getElementById('topbar-user-name');
+                const roleEl = document.getElementById('topbar-user-role');
+                const avatarEl = document.getElementById('topbar-user-avatar');
+                if (nameEl && user.name) nameEl.textContent = user.name;
+                if (roleEl) roleEl.textContent = (user.role || 'Super Admin').toUpperCase();
+                if (avatarEl && user.name) {
+                    avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=004d40&color=fff&bold=true`;
+                }
+            }
+        } catch(e) {}
+    }
+
     // ----- UI TOGGLES -----
     function showApp() {
         loginScreen.style.display = 'none';
         appShell.style.display = 'flex';
+        updateAdminProfileHeader();
         handleRoute(); // Load current route
     }
 

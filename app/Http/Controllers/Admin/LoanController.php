@@ -219,6 +219,40 @@ class LoanController extends Controller
         return ApiResponse::success($installments, 'Installments retrieved successfully');
     }
 
+    public function destroyInstallment(Request $request, $id)
+    {
+        $user = $request->user() ?? auth()->user();
+        if (!$user || !$user->hasRole('Super Admin')) {
+            return ApiResponse::error('Unauthorized', 403);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $installment = LoanInstallment::findOrFail($id);
+
+            // Clean up related agent collections
+            \App\Models\AgentCollection::where('loan_installment_id', $installment->id)->delete();
+
+            // Clean up related user transaction if any
+            if (class_exists(\App\Models\UserTransaction::class)) {
+                \App\Models\UserTransaction::where('reference_type', \App\Models\LoanInstallment::class)
+                    ->where('reference_id', $installment->id)
+                    ->delete();
+            }
+
+            $installment->delete();
+
+            DB::commit();
+
+            return ApiResponse::success(null, 'Loan installment deleted successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return ApiResponse::error('Failed to delete loan installment: ' . $e->getMessage(), 500);
+        }
+    }
+
     public function destroy(Request $request, $id)
     {
         if (!$request->user()->hasRole('Super Admin')) {

@@ -250,11 +250,43 @@ class InstallmentController extends Controller
     // ❌ Delete
     public function destroy($id)
     {
-        Installment::findOrFail($id)->delete();
+        $user = auth()->user() ?? request()->user();
+        if (!$user || !$user->hasRole('Super Admin')) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Deleted'
-        ]);
+        DB::beginTransaction();
+
+        try {
+            $installment = Installment::findOrFail($id);
+
+            // Clean up related agent collections
+            \App\Models\AgentCollection::where('installment_id', $installment->id)->delete();
+
+            // Clean up user transactions
+            if (class_exists(\App\Models\UserTransaction::class)) {
+                \App\Models\UserTransaction::where('reference_type', \App\Models\Installment::class)
+                    ->where('reference_id', $installment->id)
+                    ->delete();
+            }
+
+            $installment->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Installment deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete installment: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -256,10 +256,10 @@
                     <span style="color: #cbd5e1; font-weight: 300;">|</span>
                     <a href="#settings" class="user-profile">
                         <div class="user-info">
-                            <span class="user-name">Admin User</span>
-                            <span class="user-role">SUPER ADMIN</span>
+                            <span class="user-name" id="topbar-user-name">Admin User</span>
+                            <span class="user-role" id="topbar-user-role">SUPER ADMIN</span>
                         </div>
-                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=004d40&color=fff&bold=true" alt="AdminAvatar">
+                        <img id="topbar-user-avatar" src="https://ui-avatars.com/api/?name=Admin+User&background=004d40&color=fff&bold=true" alt="AdminAvatar">
                     </a>
                 </div>
             </header>

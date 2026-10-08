@@ -232,4 +232,60 @@ class AgentController extends Controller
             'message' => 'Collection rejected'
         ]);
     }
+
+    /**
+     * Delete Collection
+     */
+    public function deleteCollection($id)
+    {
+        $collection = AgentCollection::find($id);
+
+        if (!$collection) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Collection not found'
+            ], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Revert linked installment if approved
+            if ($collection->status === 'approved') {
+                if ($collection->collection_type === 'committee' && $collection->installment_id) {
+                    $installment = Installment::find($collection->installment_id);
+                    if ($installment && $installment->status === 'paid') {
+                        $installment->update([
+                            'status' => 'pending',
+                            'paid_date' => null,
+                            'collected_by' => null,
+                        ]);
+                    }
+                } elseif ($collection->collection_type === 'loan' && $collection->loan_installment_id) {
+                    $loanInstallment = LoanInstallment::find($collection->loan_installment_id);
+                    if ($loanInstallment && $loanInstallment->status === 'paid') {
+                        $loanInstallment->update([
+                            'status' => 'pending',
+                            'paid_date' => null,
+                            'collected_by' => null,
+                        ]);
+                    }
+                }
+            }
+
+            $collection->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Collection deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to delete collection: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

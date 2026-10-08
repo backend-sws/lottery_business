@@ -98,6 +98,8 @@
                     ? `<button class="btn-primary" onclick="collectLoanInstallment(${inst.id}, ${id})" style="padding: 2px 8px; font-size: 0.75rem;">Collect</button>`
                     : `<span style="color: #94a3b8; font-size: 0.75rem;">Paid on ${inst.paid_date}</span>`;
 
+                let deleteBtn = `<button class="btn-secondary text-danger" onclick="deleteLoanInstallmentFromLoan(${inst.id}, ${id})" style="padding: 2px 6px; font-size: 0.75rem; border: 1px solid #fecaca; background: #fff; color: #ef4444; border-radius: 4px; cursor: pointer;" title="Delete Installment"><i class="fa-solid fa-trash-can"></i></button>`;
+
                 html += `
                     <tr>
                         <td>${index + 1}</td>
@@ -106,7 +108,12 @@
                         <td>₹${inst.interest_component}</td>
                         <td><strong>₹${inst.total_amount}</strong></td>
                         <td>${statusBadge}</td>
-                        <td>${actionBtn}</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                ${actionBtn}
+                                ${deleteBtn}
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
@@ -117,6 +124,31 @@
         } catch (err) {
             contentDiv.innerHTML = `<div class="text-danger text-center">Failed to load installments.</div>`;
             console.error(err);
+        }
+    };
+
+    window.deleteLoanInstallmentFromLoan = async function(installmentId, loanId) {
+        if (!confirm(`Are you sure you want to delete installment #${installmentId}? This action cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`/api/admin/loan-installments/${installmentId}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            const data = await res.json();
+            if (res.ok && (data.status === true || data.status === 'success' || data.success === true)) {
+                alert(data.message || 'Loan installment deleted successfully');
+                const detailRow = document.getElementById(`loan-details-${loanId}`);
+                if (detailRow) {
+                    detailRow.style.display = 'none';
+                    toggleLoanDetails(loanId);
+                }
+            } else {
+                alert('Error: ' + (data.message || 'Failed to delete loan installment'));
+            }
+        } catch (err) {
+            console.error("Error deleting loan installment:", err);
+            alert("An error occurred while deleting loan installment.");
         }
     };
 

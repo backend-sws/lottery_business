@@ -314,6 +314,9 @@
             if (res.ok && data.success) {
                 authToken = data.data.token;
                 localStorage.setItem('admin_token', authToken);
+                if (data.data.user) {
+                    localStorage.setItem('admin_user', JSON.stringify(data.data.user));
+                }
                 errorMsg.style.display = 'none';
                 showApp();
             } else {
@@ -329,6 +332,7 @@
     logoutBtn.addEventListener('click', async () => {
         try { await fetch('/api/admin/logout', { method: 'POST', headers: getHeaders() }); } catch(e) {}
         localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
         authToken = null;
         window.location.hash = '';
         showLogin();

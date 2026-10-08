@@ -162,6 +162,7 @@ Route::prefix('admin')->group(function () {
 
         // 💳 Loans
         Route::get('/loan-installments', [\App\Http\Controllers\Admin\LoanController::class, 'installments']);
+        Route::delete('/loan-installments/{id}', [\App\Http\Controllers\Admin\LoanController::class, 'destroyInstallment']);
         Route::post('/loans/{id}/collect', [\App\Http\Controllers\Admin\LoanController::class, 'collect']);
         Route::apiResource('loans', \App\Http\Controllers\Admin\LoanController::class);
 
@@ -187,6 +188,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/agents/collections', [\App\Http\Controllers\Admin\AgentController::class, 'getCollections']);
         Route::post('/agents/collections/{id}/approve', [\App\Http\Controllers\Admin\AgentController::class, 'approveCollection']);
         Route::post('/agents/collections/{id}/reject', [\App\Http\Controllers\Admin\AgentController::class, 'rejectCollection']);
+        Route::delete('/agents/collections/{id}', [\App\Http\Controllers\Admin\AgentController::class, 'deleteCollection']);
 
         // 💰 Payouts
         Route::get('/payouts', [\App\Http\Controllers\Admin\PayoutController::class, 'index']);
