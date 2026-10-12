@@ -104,6 +104,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error(e);
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding: 25px;">No agents registered in system.</td></tr>';
+            }
         }
     }
 
@@ -243,14 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
                         }
 
-                        // Method badge color
-                        let methodBadge = 'badge-neutral';
-                        const methodLower = method.toLowerCase();
-                        if (methodLower.includes('upi') || methodLower.includes('digital') || methodLower.includes('wallet')) {
-                            methodBadge = 'badge-success';
-                        } else if (methodLower.includes('cash')) {
-                            methodBadge = 'badge-pending';
-                        }
+
 
                         colRowsHtml += `
                             <tr>
@@ -421,11 +417,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load agents database list
     async function loadAgentsList() {
+        const tbody = document.getElementById('agents-table-tbody');
         try {
             const res = await window.apiFetch('/api/admin/members?role=agent');
-            if (!res || !res.ok) return;
+            if (!res || !res.ok) {
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding: 25px;">No agents registered in system.</td></tr>';
+                }
+                return;
+            }
             const data = await res.json();
-            const tbody = document.getElementById('agents-table-tbody');
             if (!tbody) return;
 
             const membersList = Array.isArray(data?.data?.data)
@@ -552,6 +553,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error(e);
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding: 25px;">No agents registered in system.</td></tr>';
+            }
         }
     }
 
@@ -634,6 +638,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error(e);
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding: 25px;">No agents registered in system.</td></tr>';
+            }
         }
     };
 
