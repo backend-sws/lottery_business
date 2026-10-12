@@ -7,42 +7,20 @@
         </div>
     </div>
 
-    <!-- Payment Gateway Settings -->
-    <div class="panel-card" style="margin-bottom: 24px;">
-        <div class="panel-card-header">
-            <h3><i class="fa-solid fa-qrcode" style="color: var(--primary);"></i> Payment Gateway Settings</h3>
+    <!-- Quick Notice to Settings -->
+    <div class="panel-card" style="margin-bottom: 24px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(0,72,56,0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                <i class="fa-solid fa-qrcode"></i>
+            </div>
+            <div>
+                <strong style="font-size: 0.95rem; color: var(--text-main); display: block;">Mobile App Payment Gateway & QR Code</strong>
+                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Manage UPI QR code uploads and WhatsApp helpline numbers in the dedicated Portal Settings view.</p>
+            </div>
         </div>
-        <div style="padding: 20px;">
-            <form id="payment-settings-form" enctype="multipart/form-data">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                        <div class="input-group" style="margin-bottom: 12px;">
-                            <label>Admin WhatsApp Phone Number</label>
-                            <div class="input-field" style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
-                                <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
-                                <input type="text" name="admin_phone" id="pay-setting-phone" placeholder="+919999999999" style="border: none; background: transparent; outline: none; width: 100%;">
-                            </div>
-                        </div>
-                        <div class="input-group" style="margin-top: 15px; margin-bottom: 12px;">
-                            <label>Upload Payment QR Code Screenshot</label>
-                            <div class="input-field" style="background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
-                                <i class="fa-solid fa-upload" style="color: #9ca3af;"></i>
-                                <input type="file" name="qr_code" id="pay-setting-qrcode" accept="image/*" style="border: none; background: transparent; outline: none; width: 100%;">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn-primary" style="margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                            <i class="fa-solid fa-save"></i> Save Payment Settings
-                        </button>
-                    </div>
-                    <div style="text-align: center; border-left: 1px solid #e5e7eb; padding-left: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <h4 style="margin: 0 0 10px 0; color: #64748b; font-size: 0.9rem;">Current QR Code</h4>
-                        <div id="pay-setting-qr-preview" style="border: 1px dashed #cbd5e1; border-radius: 12px; padding: 10px; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8fafc;">
-                            <span style="color: #94a3b8; font-size: 0.85rem;">No QR Code Set</span>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
+        <a href="#settings" class="btn-secondary" style="text-decoration: none; padding: 10px 18px; font-size: 0.85rem; font-weight: 600; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-gear"></i> Configure in Settings
+        </a>
     </div>
 
     <!-- Payouts Table -->

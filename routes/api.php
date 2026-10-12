@@ -73,8 +73,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
 // 🖼️ Public Profile Photo Viewer
 Route::get('/profile-photo/{userId}/{filename}', [\App\Http\Controllers\Api\DocumentController::class, 'showProfilePhoto']);
 
+// 💳 Public Payment Settings & Dynamic QR Image
+Route::get('/payment-setting', [\App\Http\Controllers\User\PaymentSettingController::class, 'show']);
+Route::get('/payment-setting/qr-code', [\App\Http\Controllers\User\PaymentSettingController::class, 'qrCodeImage']);
+
 // 🧑 User Specific API Routes
 Route::prefix('user')->group(function () {
+    Route::get('/payment-setting', [\App\Http\Controllers\User\PaymentSettingController::class, 'show']);
+    Route::get('/payment-setting/qr-code', [\App\Http\Controllers\User\PaymentSettingController::class, 'qrCodeImage']);
     Route::post('/login', [\App\Http\Controllers\Api\UserAuthController::class, 'login']);
 Route::post('/register', [\App\Http\Controllers\Api\UserAuthController::class, 'register']);
 

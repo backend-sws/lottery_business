@@ -102,57 +102,8 @@
         } catch (err) { console.error('Lotteries Load Error:', err); }
     }
 
-    async function loadPaymentSettingsData() {
-        try {
-            const res = await window.apiFetch('/api/admin/payment-setting');
-            if (!res || !res.ok) return;
-            const payload = await res.json();
-            if (payload.status && payload.data) {
-                const data = payload.data;
-                const phoneInput = document.getElementById('pay-setting-phone');
-                if (phoneInput) {
-                    phoneInput.value = data.admin_phone || '';
-                }
-                const qrPreview = document.getElementById('pay-setting-qr-preview');
-                if (qrPreview) {
-                    if (data.qr_code) {
-                        qrPreview.innerHTML = `<img src="${data.qr_code}" style="max-width:100%; max-height:100%; border-radius:8px;">`;
-                    } else {
-                        qrPreview.innerHTML = `<span style="color: #94a3b8; font-size: 0.85rem;">No QR Code Set</span>`;
-                    }
-                }
-            }
-        } catch (err) { console.error('Payment Settings Load Error:', err); }
-    }
-
-    // Bind form submit for payment settings
-    document.addEventListener('submit', async function(e) {
-        if (e.target && e.target.id === 'payment-settings-form') {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            try {
-                const res = await window.apiFetch('/api/admin/payment-setting', {
-                    method: 'POST',
-                    body: formData
-                });
-                if (!res) return;
-                const payload = await res.json();
-                if (payload.status) {
-                    alert('Payment settings saved successfully!');
-                    loadPaymentSettingsData();
-                } else {
-                    alert('Error saving payment settings: ' + (payload.message || 'Unknown error'));
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Failed to save settings.');
-            }
-        }
-    });
-
     async function loadPayoutsData() {
         try {
-            loadPaymentSettingsData();
             const res = await window.apiFetch('/api/admin/payouts');
             if (!res || !res.ok) return;
             const data = await res.json();
