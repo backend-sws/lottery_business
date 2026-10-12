@@ -1,4 +1,18 @@
 
+    window.autoCalculateEndDate = function(prefix) {
+        const startInput = document.getElementById(prefix + '_start_date');
+        const durInput = document.getElementById(prefix + '_duration');
+        const endInput = document.getElementById(prefix + '_end_date');
+        if (!startInput || !durInput || !endInput || !startInput.value) return;
+
+        const dur = parseInt(durInput.value) || 12;
+        const d = new Date(startInput.value);
+        if (!isNaN(d.getTime())) {
+            d.setMonth(d.getMonth() + dur);
+            endInput.value = d.toISOString().split('T')[0];
+        }
+    };
+
     function updateAdminProfileHeader() {
         try {
             const userStr = localStorage.getItem('admin_user');
@@ -40,7 +54,17 @@
                     <div class="input-group"><label>Name</label><div class="input-field"><input type="text" id="c_name" required></div></div>
                     <div class="input-group"><label>Amount (₹)</label><div class="input-field"><input type="number" id="c_amount" required></div></div>
                     <div class="input-group"><label>Total Members Limit</label><div class="input-field"><input type="number" id="c_total" required></div></div>
-                    <div class="input-group"><label>Duration (Months)</label><div class="input-field"><input type="number" id="c_duration" required></div></div>
+                    <div class="input-group"><label>Duration (Months)</label><div class="input-field"><input type="number" id="c_duration" onchange="autoCalculateEndDate('c')" required></div></div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Start Date (Kab se shuru)</label>
+                            <div class="input-field"><input type="date" id="c_start_date" onchange="autoCalculateEndDate('c')" required></div>
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-calendar-check" style="color:#22c55e;"></i> End Date (Kab tak chalega)</label>
+                            <div class="input-field"><input type="date" id="c_end_date" required></div>
+                        </div>
+                    </div>
                     <div class="input-group"><label>Frequency</label>
                         <select id="c_freq" class="input-field" style="width:100%; border:none; background:transparent;">
                             <option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option>
@@ -156,7 +180,17 @@
                     <div class="input-group"><label>Name</label><div class="input-field"><input type="text" id="ec_name" required></div></div>
                     <div class="input-group"><label>Amount (₹)</label><div class="input-field"><input type="number" id="ec_amount" required></div></div>
                     <div class="input-group"><label>Total Members Limit</label><div class="input-field"><input type="number" id="ec_total" required></div></div>
-                    <div class="input-group"><label>Duration (Months)</label><div class="input-field"><input type="number" id="ec_duration" required></div></div>
+                    <div class="input-group"><label>Duration (Months)</label><div class="input-field"><input type="number" id="ec_duration" onchange="autoCalculateEndDate('ec')" required></div></div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Start Date (Kab se)</label>
+                            <div class="input-field"><input type="date" id="ec_start_date" onchange="autoCalculateEndDate('ec')" required></div>
+                        </div>
+                        <div class="input-group">
+                            <label><i class="fa-solid fa-calendar-check" style="color:#22c55e;"></i> End Date (Kab tak)</label>
+                            <div class="input-field"><input type="date" id="ec_end_date" required></div>
+                        </div>
+                    </div>
                     <div class="input-group"><label>Frequency</label>
                         <select id="ec_freq" class="input-field" style="width:100%; border:none; background:transparent;">
                             <option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option>
@@ -452,6 +486,14 @@
         }
 
         modalBody.innerHTML = html;
+        if (type === 'create-committee') {
+            const today = new Date().toISOString().split('T')[0];
+            const startDateInput = document.getElementById('c_start_date');
+            if (startDateInput && !startDateInput.value) {
+                startDateInput.value = today;
+                window.autoCalculateEndDate('c');
+            }
+        }
     };
 
     window.closeModal = function() {
@@ -472,6 +514,12 @@
             document.getElementById('ec_total').value = data.total_members;
             document.getElementById('ec_duration').value = data.duration;
             document.getElementById('ec_freq').value = data.payment_frequency;
+            if (document.getElementById('ec_start_date')) {
+                document.getElementById('ec_start_date').value = data.start_date ? data.start_date.split('T')[0] : '';
+            }
+            if (document.getElementById('ec_end_date')) {
+                document.getElementById('ec_end_date').value = data.end_date ? data.end_date.split('T')[0] : '';
+            }
             document.getElementById('ec_return').value = data.return_percentage || '';
             document.getElementById('ec_status').value = data.status;
             document.getElementById('ec_trending').checked = data.trending == 1 || data.trending === true;

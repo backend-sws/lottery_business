@@ -54,7 +54,7 @@ class CommitteeController extends Controller
 
             // Generate Installments
             $amount = $committee->amount / $committee->duration; // Monthly installment amount
-            $date = Carbon::now();
+            $date = $committee->start_date ? Carbon::parse($committee->start_date) : Carbon::now();
 
             $installments = [];
             for ($i = 1; $i <= $committee->duration; $i++) {

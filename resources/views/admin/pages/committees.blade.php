@@ -12,6 +12,7 @@
                                     <th>Name</th>
                                     <th>Amount</th>
                                     <th>Duration</th>
+                                    <th>Period (Kab se Kab tak)</th>
                                     <th>Frequency</th>
                                     <th>Return</th>
                                     <th>Status</th>

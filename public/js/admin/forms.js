@@ -14,13 +14,17 @@
                     total_members: document.getElementById('c_total').value,
                     duration: document.getElementById('c_duration').value,
                     payment_frequency: document.getElementById('c_freq').value,
-                    start_date: new Date().toISOString().split('T')[0],
-                    end_date: (function() {
-                        let d = new Date();
-                        let dur = parseInt(document.getElementById('c_duration').value);
-                        d.setMonth(d.getMonth() + dur);
-                        return d.toISOString().split('T')[0];
-                    })(),
+                    start_date: (document.getElementById('c_start_date') && document.getElementById('c_start_date').value) 
+                        ? document.getElementById('c_start_date').value 
+                        : new Date().toISOString().split('T')[0],
+                    end_date: (document.getElementById('c_end_date') && document.getElementById('c_end_date').value)
+                        ? document.getElementById('c_end_date').value
+                        : (function() {
+                            let d = new Date();
+                            let dur = parseInt(document.getElementById('c_duration').value) || 12;
+                            d.setMonth(d.getMonth() + dur);
+                            return d.toISOString().split('T')[0];
+                        })(),
                     return_percentage: document.getElementById('c_return').value || 0,
                     status: 'active',
                     trending: document.getElementById('c_trending').checked ? 1 : 0
@@ -33,13 +37,17 @@
                     total_members: document.getElementById('ec_total').value,
                     duration: document.getElementById('ec_duration').value,
                     payment_frequency: document.getElementById('ec_freq').value,
-                    start_date: new Date().toISOString().split('T')[0], // Retain current logic or pass original
-                    end_date: (function() {
-                        let d = new Date();
-                        let dur = parseInt(document.getElementById('ec_duration').value);
-                        d.setMonth(d.getMonth() + dur);
-                        return d.toISOString().split('T')[0];
-                    })(),
+                    start_date: (document.getElementById('ec_start_date') && document.getElementById('ec_start_date').value)
+                        ? document.getElementById('ec_start_date').value
+                        : new Date().toISOString().split('T')[0],
+                    end_date: (document.getElementById('ec_end_date') && document.getElementById('ec_end_date').value)
+                        ? document.getElementById('ec_end_date').value
+                        : (function() {
+                            let d = new Date();
+                            let dur = parseInt(document.getElementById('ec_duration').value) || 12;
+                            d.setMonth(d.getMonth() + dur);
+                            return d.toISOString().split('T')[0];
+                        })(),
                     return_percentage: document.getElementById('ec_return').value || 0,
                     status: document.getElementById('ec_status').value,
                     trending: document.getElementById('ec_trending').checked ? 1 : 0

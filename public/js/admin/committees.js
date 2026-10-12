@@ -24,6 +24,11 @@
                             <td><strong>${c.name}</strong></td>
                             <td>₹${c.amount}</td>
                             <td>${c.duration} Months</td>
+                            <td>
+                                <span class="badge" style="background:rgba(59, 130, 246, 0.1); color:#3b82f6; border:1px solid rgba(59, 130, 246, 0.2); font-size:0.75rem; white-space:nowrap;">
+                                    <i class="fa-regular fa-calendar-days"></i> ${c.start_date ? c.start_date.split('T')[0] : 'N/A'} <i class="fa-solid fa-arrow-right text-xs"></i> ${c.end_date ? c.end_date.split('T')[0] : 'N/A'}
+                                </span>
+                            </td>
                             <td><span class="badge badge-primary">${c.payment_frequency}</span></td>
                             <td>${c.return_percentage}%</td>
                             <td><span class="text-success"><i class="fa-solid fa-circle text-sm"></i> ${c.status}</span></td>
@@ -37,7 +42,7 @@
                 });
                 tbody.innerHTML = commHtml;
             } else {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No committees found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No committees found.</td></tr>';
             }
         } catch (err) { console.error('Load Committees Error:', err); }
     }
