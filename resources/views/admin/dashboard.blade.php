@@ -208,6 +208,7 @@
                 <li><a href="#agents" class="nav-link" data-view="agents"><i class="fa-solid fa-user-tie"></i> <span>Agents</span></a></li>
                 <li><a href="#kyc" class="nav-link" data-view="kyc"><i class="fa-solid fa-shield-heart"></i> <span>KYC</span></a></li>
                 <li><a href="#loans" class="nav-link" data-view="loans"><i class="fa-solid fa-hand-holding-dollar"></i> <span>Loans</span></a></li>
+                <li><a href="#loan-requests" class="nav-link" data-view="loan-requests"><i class="fa-solid fa-file-invoice-dollar"></i> <span>Loan Requests</span> <span id="sidebar-pending-loan-badge" class="badge" style="display:none; margin-left:auto; background:#f59e0b; color:white; border-radius:10px; padding:2px 7px; font-size:0.7rem; font-weight:700;">0</span></a></li>
                 <li><a href="#committees" class="nav-link" data-view="committees"><i class="fa-solid fa-users-rectangle"></i> <span>Committee</span></a></li>
                 <li><a href="#lotteries" class="nav-link" data-view="lotteries"><i class="fa-solid fa-trophy"></i> <span>Lotteries</span></a></li>
                 <li><a href="#installments" class="nav-link" data-view="installments"><i class="fa-solid fa-file-invoice-dollar"></i> <span>Installment</span></a></li>
@@ -270,6 +271,7 @@
                 @include('admin.pages.committees')
                 @include('admin.pages.members')
                 @include('admin.pages.loans')
+                @include('admin.pages.loan-requests')
                 @include('admin.pages.installments')
                 @include('admin.pages.payouts')
                 @include('admin.pages.pnl')
@@ -308,6 +310,7 @@
     <script src="/js/admin/members.js?v={{ time() }}"></script>
     <script src="/js/admin/installments.js?v={{ time() }}"></script>
     <script src="/js/admin/loans.js?v={{ time() }}"></script>
+    <script src="/js/admin/loan_requests.js?v={{ time() }}"></script>
     <script src="/js/admin/lotteries_payouts.js?v={{ time() }}"></script>
     <script src="/js/admin/collections.js?v={{ time() }}"></script>
     <script src="/js/admin/charts.js?v={{ time() }}"></script>

@@ -198,6 +198,9 @@
                         if (typeof loadLoansData === 'function') loadLoansData();
                         if (typeof loadBalanceSheetData === 'function') loadBalanceSheetData();
                     }
+                    if (targetView === 'loan-requests') {
+                        if (typeof loadLoanRequestsData === 'function') loadLoanRequestsData();
+                    }
                     if ((targetView === 'payouts' || targetView === 'payments') && typeof loadPayoutsData === 'function') loadPayoutsData();
                     if (targetView === 'collection-committees' && typeof loadCollectionCommittees === 'function') loadCollectionCommittees();
                     if (targetView === 'committee-details' && typeof loadCommitteeDetails === 'function') loadCommitteeDetails(paramId);

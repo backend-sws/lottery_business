@@ -107,9 +107,11 @@ Route::post('/register', [\App\Http\Controllers\Api\UserAuthController::class, '
         Route::get('/materials', [\App\Http\Controllers\User\MaterialController::class, 'index']);
         Route::get('/materials/stocks', [\App\Http\Controllers\User\MaterialController::class, 'stocks']);
 
-        // 💳 Loans
+        // 💳 Loans & Loan Requests
         Route::get('/loans', [\App\Http\Controllers\User\LoanController::class, 'index']);
         Route::get('/loans/{id}', [\App\Http\Controllers\User\LoanController::class, 'show']);
+        Route::get('/loan-requests', [\App\Http\Controllers\User\LoanRequestController::class, 'index']);
+        Route::post('/loan-requests', [\App\Http\Controllers\User\LoanRequestController::class, 'store']);
 
         // 💰 Installments
         Route::get('/installments/pending', [\App\Http\Controllers\User\InstallmentController::class, 'pending']);
@@ -166,7 +168,10 @@ Route::prefix('admin')->group(function () {
         Route::apiResource('materials', \App\Http\Controllers\Admin\MaterialController::class);
         Route::apiResource('material-stocks', \App\Http\Controllers\Admin\MaterialStockController::class);
 
-        // 💳 Loans
+        // 💳 Loans & Loan Requests
+        Route::get('/loan-requests', [\App\Http\Controllers\Admin\LoanRequestController::class, 'index']);
+        Route::post('/loan-requests/{id}/approve', [\App\Http\Controllers\Admin\LoanRequestController::class, 'approve']);
+        Route::post('/loan-requests/{id}/reject', [\App\Http\Controllers\Admin\LoanRequestController::class, 'reject']);
         Route::get('/loan-installments', [\App\Http\Controllers\Admin\LoanController::class, 'installments']);
         Route::delete('/loan-installments/{id}', [\App\Http\Controllers\Admin\LoanController::class, 'destroyInstallment']);
         Route::post('/loans/{id}/collect', [\App\Http\Controllers\Admin\LoanController::class, 'collect']);
