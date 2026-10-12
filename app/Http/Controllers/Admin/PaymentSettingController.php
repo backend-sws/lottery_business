@@ -11,60 +11,60 @@ class PaymentSettingController extends Controller
 {
     public function show()
     {
-         = PaymentSetting::latest()->first();
-        if (!) {
-             = PaymentSetting::create([
+        $setting = PaymentSetting::latest()->first();
+        if (!$setting) {
+            $setting = PaymentSetting::create([
                 'qr_code' => null,
                 'admin_phone' => '+919999999999'
             ]);
         }
 
-         = null;
-        if (->qr_code) {
-             = ->updated_at ? ->updated_at->timestamp : time();
-             = url('/api/payment-setting/qr-code') . '?v=' . ;
+        $qrCodeUrl = null;
+        if ($setting->qr_code) {
+            $cacheBuster = $setting->updated_at ? $setting->updated_at->timestamp : time();
+            $qrCodeUrl = url('/api/payment-setting/qr-code') . '?v=' . $cacheBuster;
         }
 
         return response()->json([
             'status' => true,
             'success' => true,
             'data' => [
-                'qr_code' => ,
-                'admin_phone' => ->admin_phone
+                'qr_code' => $qrCodeUrl,
+                'admin_phone' => $setting->admin_phone
             ]
         ]);
     }
 
-    public function update(Request )
+    public function update(Request $request)
     {
-        ->validate([
+        $request->validate([
             'admin_phone' => 'nullable|string',
             'qr_code' => 'nullable|image|max:10240'
         ]);
 
-         = PaymentSetting::latest()->first();
-        if (!) {
-             = new PaymentSetting();
+        $setting = PaymentSetting::latest()->first();
+        if (!$setting) {
+            $setting = new PaymentSetting();
         }
 
-        if (->hasFile('qr_code')) {
-            if (->qr_code && Storage::disk('public')->exists(->qr_code)) {
-                Storage::disk('public')->delete(->qr_code);
+        if ($request->hasFile('qr_code')) {
+            if ($setting->qr_code && Storage::disk('public')->exists($setting->qr_code)) {
+                Storage::disk('public')->delete($setting->qr_code);
             }
-             = ->file('qr_code')->store('payment', 'public');
-            ->qr_code = ;
+            $path = $request->file('qr_code')->store('payment', 'public');
+            $setting->qr_code = $path;
         }
 
-        if (->has('admin_phone') && ->filled('admin_phone')) {
-            ->admin_phone = ->admin_phone;
+        if ($request->has('admin_phone') && $request->filled('admin_phone')) {
+            $setting->admin_phone = $request->admin_phone;
         }
 
-        ->save();
+        $setting->save();
 
-         = null;
-        if (->qr_code) {
-             = ->updated_at ? ->updated_at->timestamp : time();
-             = url('/api/payment-setting/qr-code') . '?v=' . ;
+        $qrCodeUrl = null;
+        if ($setting->qr_code) {
+            $cacheBuster = $setting->updated_at ? $setting->updated_at->timestamp : time();
+            $qrCodeUrl = url('/api/payment-setting/qr-code') . '?v=' . $cacheBuster;
         }
 
         return response()->json([
@@ -72,8 +72,8 @@ class PaymentSettingController extends Controller
             'success' => true,
             'message' => 'Payment Settings Updated',
             'data' => [
-                'qr_code' => ,
-                'admin_phone' => ->admin_phone
+                'qr_code' => $qrCodeUrl,
+                'admin_phone' => $setting->admin_phone
             ]
         ]);
     }
