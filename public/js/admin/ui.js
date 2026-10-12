@@ -57,11 +57,11 @@
                     <div class="input-group"><label>Duration (Months)</label><div class="input-field"><input type="number" id="c_duration" onchange="autoCalculateEndDate('c')" required></div></div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div class="input-group">
-                            <label><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Start Date (Kab se shuru)</label>
+                            <label><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Start Date</label>
                             <div class="input-field"><input type="date" id="c_start_date" onchange="autoCalculateEndDate('c')" required></div>
                         </div>
                         <div class="input-group">
-                            <label><i class="fa-solid fa-calendar-check" style="color:#22c55e;"></i> End Date (Kab tak chalega)</label>
+                            <label><i class="fa-solid fa-calendar-check" style="color:#22c55e;"></i> End Date</label>
                             <div class="input-field"><input type="date" id="c_end_date" required></div>
                         </div>
                     </div>
@@ -183,11 +183,11 @@
                     <div class="input-group"><label>Duration (Months)</label><div class="input-field"><input type="number" id="ec_duration" onchange="autoCalculateEndDate('ec')" required></div></div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div class="input-group">
-                            <label><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Start Date (Kab se)</label>
+                            <label><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> Start Date</label>
                             <div class="input-field"><input type="date" id="ec_start_date" onchange="autoCalculateEndDate('ec')" required></div>
                         </div>
                         <div class="input-group">
-                            <label><i class="fa-solid fa-calendar-check" style="color:#22c55e;"></i> End Date (Kab tak)</label>
+                            <label><i class="fa-solid fa-calendar-check" style="color:#22c55e;"></i> End Date</label>
                             <div class="input-field"><input type="date" id="ec_end_date" required></div>
                         </div>
                     </div>
@@ -507,22 +507,23 @@
         try {
             const res = await window.apiFetch(`/api/admin/committees/${id}`);
             if (!res || !res.ok) return;
-            const data = await res.json();
+            const resData = await res.json();
+            const comm = (resData && resData.data) ? resData.data : resData;
             openModal('edit-committee', id);
-            document.getElementById('ec_name').value = data.name;
-            document.getElementById('ec_amount').value = data.amount;
-            document.getElementById('ec_total').value = data.total_members;
-            document.getElementById('ec_duration').value = data.duration;
-            document.getElementById('ec_freq').value = data.payment_frequency;
+            document.getElementById('ec_name').value = comm.name || '';
+            document.getElementById('ec_amount').value = comm.amount || '';
+            document.getElementById('ec_total').value = comm.total_members || '';
+            document.getElementById('ec_duration').value = comm.duration || '';
+            document.getElementById('ec_freq').value = comm.payment_frequency || 'monthly';
             if (document.getElementById('ec_start_date')) {
-                document.getElementById('ec_start_date').value = data.start_date ? data.start_date.split('T')[0] : '';
+                document.getElementById('ec_start_date').value = comm.start_date ? comm.start_date.split('T')[0] : '';
             }
             if (document.getElementById('ec_end_date')) {
-                document.getElementById('ec_end_date').value = data.end_date ? data.end_date.split('T')[0] : '';
+                document.getElementById('ec_end_date').value = comm.end_date ? comm.end_date.split('T')[0] : '';
             }
-            document.getElementById('ec_return').value = data.return_percentage || '';
-            document.getElementById('ec_status').value = data.status;
-            document.getElementById('ec_trending').checked = data.trending == 1 || data.trending === true;
+            document.getElementById('ec_return').value = (comm.return_percentage !== undefined && comm.return_percentage !== null) ? comm.return_percentage : '';
+            document.getElementById('ec_status').value = comm.status || 'active';
+            document.getElementById('ec_trending').checked = comm.trending == 1 || comm.trending === true || comm.trending === '1';
         } catch (err) { console.error("Error fetching committee:", err); }
     };
 
