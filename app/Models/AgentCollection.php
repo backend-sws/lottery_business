@@ -11,6 +11,7 @@ class AgentCollection extends Model
         'member_id',
         'collection_type', // 'committee' or 'loan'
         'amount_collected',
+        'payment_mode',
         'details',
         'status', // pending, approved, rejected
         'commission_percentage',

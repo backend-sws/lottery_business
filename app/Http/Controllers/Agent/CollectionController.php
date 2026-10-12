@@ -20,7 +20,9 @@ class CollectionController extends Controller
             'type' => 'required|in:committee,loan',
             'installment_id' => 'required|integer',
             'amount' => 'required|numeric|min:1',
-            'payment_notes' => 'nullable|string'
+            'payment_notes' => 'nullable|string',
+            'payment_mode' => 'nullable|string|in:cash,online',
+            'payment_method' => 'nullable|string|in:cash,online'
         ]);
 
         if ($validator->fails()) {
@@ -74,12 +76,18 @@ class CollectionController extends Controller
                 $installmentColumn = 'loan_installment_id';
             }
 
+            $paymentMode = $request->input('payment_mode', $request->input('payment_method', 'cash'));
+            if (!in_array($paymentMode, ['cash', 'online'])) {
+                $paymentMode = 'cash';
+            }
+
             // Create AgentCollection Request matching actual DB schema
             AgentCollection::create([
                 'agent_id' => $agent->id,
                 'member_id' => $memberId,
                 'collection_type' => $type,
                 'amount_collected' => $request->amount,
+                'payment_mode' => $paymentMode,
                 'details' => $request->payment_notes,
                 'status' => 'pending', // actual DB enum is pending, approved, rejected
                 $installmentColumn => $installment->id,
@@ -110,6 +118,7 @@ class CollectionController extends Controller
                     'id' => $item->id,
                     'member_name' => $item->member->name ?? 'Unknown',
                     'amount' => $item->amount_collected,
+                    'payment_mode' => $item->payment_mode ?? 'cash',
                     'status' => $item->status,
                     'type' => $item->collection_type === 'committee' ? 'Committee' : 'Loan EMI',
                     'date' => $item->created_at->format('Y-m-d H:i:s'),

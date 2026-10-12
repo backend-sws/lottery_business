@@ -163,6 +163,7 @@
                         <th>Agent</th>
                         <th>Member</th>
                         <th>Committee Details</th>
+                        <th>Payment Mode</th>
                         <th>Amount (₹)</th>
                         <th>Collected At</th>
                         <th>Action</th>
@@ -184,6 +185,7 @@
                         <th>Agent</th>
                         <th>Member</th>
                         <th>Loan Details</th>
+                        <th>Payment Mode</th>
                         <th>Amount (₹)</th>
                         <th>Collected At</th>
                         <th>Action</th>

@@ -27,6 +27,11 @@
                 colData.forEach(c => {
                     const agentName = c.agent ? c.agent.name : 'N/A';
                     const memberName = c.member ? c.member.name : 'N/A';
+                    const isOnline = (c.payment_mode || '').toLowerCase() === 'online';
+                    const modeBadge = isOnline 
+                        ? `<span class="badge" style="background:#e0f2fe; color:#0369a1; font-weight:700; padding:4px 8px; border-radius:6px; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-qrcode"></i> ONLINE</span>`
+                        : `<span class="badge" style="background:#fef3c7; color:#92400e; font-weight:700; padding:4px 8px; border-radius:6px; font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-money-bill-1-wave"></i> CASH</span>`;
+
                     if (c.collection_type === 'committee') {
                         hasComm = true;
                         const details = c.installment && c.installment.committee ? c.installment.committee.name : 'Unknown Committee';
@@ -36,6 +41,7 @@
                                 <td>${agentName}</td>
                                 <td>${memberName}</td>
                                 <td>${details}</td>
+                                <td>${modeBadge}</td>
                                 <td class="text-success">₹${parseFloat(c.amount_collected).toFixed(2)}</td>
                                 <td>${new Date(c.collected_at).toLocaleDateString()}</td>
                                 <td>
@@ -55,6 +61,7 @@
                                 <td>${agentName}</td>
                                 <td>${memberName}</td>
                                 <td>${details}</td>
+                                <td>${modeBadge}</td>
                                 <td class="text-success">₹${parseFloat(c.amount_collected).toFixed(2)}</td>
                                 <td>${new Date(c.collected_at).toLocaleDateString()}</td>
                                 <td>
@@ -70,17 +77,17 @@
             }
 
             if (commBody) {
-                commBody.innerHTML = hasComm ? commHtml : '<tr><td colspan="7" class="text-center">No pending committee collections.</td></tr>';
+                commBody.innerHTML = hasComm ? commHtml : '<tr><td colspan="8" class="text-center">No pending committee collections.</td></tr>';
             }
             if (loanBody) {
-                loanBody.innerHTML = hasLoan ? loanHtml : '<tr><td colspan="7" class="text-center">No pending loan collections.</td></tr>';
+                loanBody.innerHTML = hasLoan ? loanHtml : '<tr><td colspan="8" class="text-center">No pending loan collections.</td></tr>';
             }
 
         } catch(err) { 
             console.error(err); 
             const commBody = document.getElementById('agent-pending-committee-collections-tbody');
             if (commBody) {
-                commBody.innerHTML = `<tr><td colspan="7" class="text-danger text-center">Error: ${err.message || 'Unknown Error'}</td></tr>`;
+                commBody.innerHTML = `<tr><td colspan="8" class="text-danger text-center">Error: ${err.message || 'Unknown Error'}</td></tr>`;
             }
         }
     }

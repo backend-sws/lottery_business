@@ -197,7 +197,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     colData.forEach(c => {
                         const agentName = c.agent ? c.agent.name : 'Unknown Agent';
                         const memberName = c.member ? c.member.name : 'Unknown Member';
-                        const method = c.details || c.collection_type || 'N/A';
+                        const modeStr = (c.payment_mode || (c.details && c.details.toLowerCase().includes('online') ? 'online' : 'cash')).toLowerCase();
+                        const isOnline = modeStr === 'online';
+                        const methodBadge = isOnline
+                            ? `<span class="badge badge-success" style="padding:3px 8px; font-size:0.7rem; font-weight:700; text-transform:uppercase; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-qrcode"></i> ONLINE</span>`
+                            : `<span class="badge badge-pending" style="padding:3px 8px; font-size:0.7rem; font-weight:700; text-transform:uppercase; display:inline-flex; align-items:center; gap:4px;"><i class="fa-solid fa-money-bill-1-wave"></i> CASH</span>`;
+                        const notesHtml = c.details ? `<div style="font-size:0.68rem; color:var(--text-muted); margin-top:2px; max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${c.details}"><i class="fa-regular fa-note-sticky"></i> ${c.details}</div>` : '';
+                        const method = methodBadge + notesHtml;
                         const amount = Number(c.amount_collected || 0).toLocaleString('en-IN');
                         const dateStr = c.collected_at || c.created_at;
                         const time = dateStr ? new Date(dateStr).toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', hour12: true}) : '--';
@@ -256,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </td>
                                 <td>${memberName}</td>
                                 <td class="font-semibold">₹${amount}</td>
-                                <td><span class="badge ${methodBadge}" style="text-transform:capitalize;">${method}</span></td>
+                                <td>${method}</td>
                                 <td><span style="font-size:0.8rem;">${dateFormatted}</span> <span style="font-size:0.7rem;color:var(--text-muted);">${time}</span></td>
                                 <td>${statusBadge}</td>
                                 <td>${actionHtml}</td>
