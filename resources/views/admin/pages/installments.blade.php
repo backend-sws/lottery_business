@@ -1,7 +1,10 @@
                 <!-- Installments View -->
                 <div id="view-installments" class="view-section" style="display:none;">
-                    <div class="header-action" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-                        <h2>Installments Collection</h2>
+                    <div class="header-action" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <h2>Installments Collection</h2>
+                            <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Monitor active member enrollments, installment schedules, and loan EMIs.</p>
+                        </div>
                         <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                             <button class="btn-secondary" style="background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); margin: 0;" onclick="sendPaymentReminders()"><i class="fa-solid fa-clock"></i> Send Payment Reminders</button>
                             <button class="btn-secondary" style="background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); margin: 0;" onclick="sendDueWarnings()"><i class="fa-solid fa-triangle-exclamation"></i> Send Due Warnings</button>
@@ -17,18 +20,34 @@
                         </button>
                     </div>
 
+                    <!-- Search and Status Filter Row -->
+                    <div class="glass-panel" style="padding: 16px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div style="position: relative; flex: 1; max-width: 420px; min-width: 250px;">
+                            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.9rem;"></i>
+                            <input type="text" id="installments-search-input" oninput="filterInstallmentsTable()" placeholder="Search member name, phone, or committee..." style="width: 100%; padding: 10px 14px 10px 38px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; box-sizing: border-box; background: #fff; outline: none; transition: border-color 0.2s;">
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <label style="font-size: 0.85rem; color: #64748b; font-weight: 600;">Status:</label>
+                            <select id="installments-status-filter" onchange="filterInstallmentsTable()" style="padding: 9px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; background: #fff; color: #334155; outline: none; cursor: pointer; font-weight: 500;">
+                                <option value="all">All Members</option>
+                                <option value="pending">With Due / Pending</option>
+                                <option value="completed">All Paid / Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- Committee Installments Table -->
                     <div id="tab-content-committee-installments" class="glass-panel" style="padding: 20px; overflow-x: auto; margin-bottom: 30px; display: block;">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th style="width: 50px;">#</th>
                                     <th>Member Name</th>
                                     <th>Committee</th>
-                                    <th>Amount</th>
-                                    <th>Paid Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
+                                    <th>Installment Amt</th>
+                                    <th>Installments</th>
+                                    <th>Progress / Status</th>
+                                    <th style="text-align: right;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="installments-tbody"></tbody>
@@ -40,13 +59,12 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th style="width: 70px;">Loan ID</th>
                                     <th>Member Name</th>
-                                    <th>Loan ID</th>
-                                    <th>Amount</th>
-                                    <th>Paid Date</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
+                                    <th>Loan Principal</th>
+                                    <th>Total EMIs</th>
+                                    <th>Progress / Status</th>
+                                    <th style="text-align: right;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="loan-installments-tbody"></tbody>
@@ -60,6 +78,9 @@
                         const loanContent = document.getElementById('tab-content-loan-installments');
                         const commBtn = document.getElementById('tab-btn-committee-installments');
                         const loanBtn = document.getElementById('tab-btn-loan-installments');
+                        if (typeof window.currentInstallmentTab !== 'undefined') {
+                            window.currentInstallmentTab = tab;
+                        }
 
                         if(tab === 'committee') {
                             commContent.style.display = 'block';
@@ -91,6 +112,10 @@
                             commBtn.style.color = '#a855f7';
                             commBtn.style.border = '1px solid #a855f7';
                             commBtn.style.opacity = '0.7';
+                        }
+
+                        if (typeof window.renderInstallmentTables === 'function') {
+                            window.renderInstallmentTables();
                         }
                     }
                 </script>

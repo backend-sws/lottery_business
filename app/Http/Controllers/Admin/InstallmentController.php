@@ -221,11 +221,19 @@ class InstallmentController extends Controller
     }
 
     // 📋 List
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        return Installment::with(['user', 'committee'])
-            ->latest()
-            ->paginate(20);
+        $query = Installment::with(['user', 'committee'])->latest();
+
+        if ($request->has('all') || $request->get('per_page') === 'all') {
+            return response()->json([
+                'status' => true,
+                'data' => $query->get()
+            ]);
+        }
+
+        $perPage = (int) $request->get('per_page', 500);
+        return $query->paginate($perPage);
     }
 
     // 👁️ Show

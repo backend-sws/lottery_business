@@ -125,7 +125,7 @@
             if (data.status === true || data.status === 'success') {
                 alert(data.message || 'Payment collected successfully!');
                 closeModal();
-                loadCommitteeDetails(committeeId);
+                loadCommitteeDetails(committeeId); if (typeof loadInstallmentsData === 'function') loadInstallmentsData();
             } else {
                 alert(data.message || 'Failed to collect payment.');
             }
