@@ -24,7 +24,9 @@ class LoanController extends Controller
     public function show(Request $request, $id)
     {
         $loan = Loan::where('user_id', $request->user()->id)
-            ->with('installments')
+            ->with(['installments' => function($q) {
+                $q->orderBy('due_date', 'asc')->orderBy('id', 'asc');
+            }])
             ->findOrFail($id);
             
         return ApiResponse::success($loan, 'Loan details fetched successfully');
