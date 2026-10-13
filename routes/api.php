@@ -79,6 +79,7 @@ Route::get('/payment-setting/qr-code', [\App\Http\Controllers\User\PaymentSettin
 
 // 🧑 User Specific API Routes
 Route::prefix('user')->group(function () {
+    Route::get('/agents', [\App\Http\Controllers\User\AgentController::class, 'index']);
     Route::get('/payment-setting', [\App\Http\Controllers\User\PaymentSettingController::class, 'show']);
     Route::get('/payment-setting/qr-code', [\App\Http\Controllers\User\PaymentSettingController::class, 'qrCodeImage']);
     Route::post('/login', [\App\Http\Controllers\Api\UserAuthController::class, 'login']);
