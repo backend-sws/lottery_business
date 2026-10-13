@@ -12,18 +12,67 @@ class MemberController extends Controller
     // 🔍 Search Member for Collection
     public function search(Request $request)
     {
-        $query = $request->input('query'); // Can be phone or name or id
+        $rawQuery = trim((string)$request->input('query', ''));
 
-        if (!$query) {
-            return ApiResponse::error('Search query is required', 400);
+        if ($rawQuery === '') {
+            return ApiResponse::success([], 'Empty search query');
         }
 
-        // Find member with role 'member' matching phone or name
-        $members = User::role('member')
-            ->where(function($q) use ($query) {
-                $q->where('phone', 'like', "%{$query}%")
-                  ->orWhere('name', 'like', "%{$query}%")
-                  ->orWhere('id', $query);
+        // Clean digits for phone number search
+        $cleanDigits = preg_replace('/[^0-9]/', '', $rawQuery);
+        $last10 = (strlen($cleanDigits) >= 10) ? substr($cleanDigits, -10) : null;
+
+        // Extract numeric ID if query is like "#MEM-4", "MEM-4", "#4", "id 4", or "4"
+        $extractedId = null;
+        if (preg_match('/^(?:#|mem|#mem|cust|client|customer|id)?[-\s:#]*(\d+)$/i', $rawQuery, $matches)) {
+            $extractedId = (int)$matches[1];
+        } elseif (ctype_digit($rawQuery)) {
+            $extractedId = (int)$rawQuery;
+        }
+
+        // Find member with role 'member' (or client/user, excluding agent/admin)
+        $members = User::where(function($rq) {
+                $rq->where('role', 'member')
+                  ->orWhere('role', 'client')
+                  ->orWhere('role', 'customer')
+                  ->orWhereHas('roles', function($sq) {
+                      $sq->whereIn('name', ['member', 'client', 'customer']);
+                  })
+                  ->orWhere(function($sub) {
+                      $sub->whereNotIn('role', ['agent', 'Super Admin', 'admin']);
+                  });
+            })
+            ->where(function($q) use ($rawQuery, $cleanDigits, $last10, $extractedId) {
+                // 1. By ID (highest specificity)
+                if ($extractedId !== null) {
+                    $q->where('id', $extractedId);
+                }
+
+                // 2. By Name & Email
+                if ($extractedId !== null) {
+                    $q->orWhere('name', 'like', "%{$rawQuery}%")
+                      ->orWhere('email', 'like', "%{$rawQuery}%");
+                } else {
+                    $q->where(function($subQ) use ($rawQuery) {
+                        $subQ->where('name', 'like', "%{$rawQuery}%")
+                             ->orWhere('email', 'like', "%{$rawQuery}%");
+                    });
+                }
+
+                // 3. By Phone
+                if (!empty($cleanDigits) && strlen($cleanDigits) >= 3) {
+                    $q->orWhere('phone', 'like', "%{$cleanDigits}%");
+
+                    if (!empty($last10)) {
+                        $q->orWhere('phone', 'like', "%{$last10}%");
+                    }
+
+                    // Normalized DB phone match (strips '+', '-', ' ', '(', ')')
+                    $q->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(phone, ''), ' ', ''), '-', ''), '+', ''), '(', ''), ')', '') LIKE ?", ["%{$cleanDigits}%"]);
+                    if (!empty($last10)) {
+                        $q->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(phone, ''), ' ', ''), '-', ''), '+', ''), '(', ''), ')', '') LIKE ?", ["%{$last10}%"]);
+                    }
+                }
             })
             ->with([
                 'committees' => function($q) {
@@ -38,11 +87,8 @@ class MemberController extends Controller
                     }]);
                 }
             ])
+            ->take(30)
             ->get();
-
-        if ($members->isEmpty()) {
-            return ApiResponse::error('No members found', 404);
-        }
 
         return ApiResponse::success($members, 'Members fetched');
     }

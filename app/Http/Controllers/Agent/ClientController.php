@@ -16,7 +16,17 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         $agentId = $request->user()->id;
-        $clientsQuery = User::role('member');
+        $clientsQuery = User::where(function($rq) {
+            $rq->where('role', 'member')
+              ->orWhere('role', 'client')
+              ->orWhere('role', 'customer')
+              ->orWhereHas('roles', function($sq) {
+                  $sq->whereIn('name', ['member', 'client', 'customer']);
+              })
+              ->orWhere(function($sub) {
+                  $sub->whereNotIn('role', ['agent', 'Super Admin', 'admin']);
+              });
+        });
 
         $totalClients = clone $clientsQuery;
         $totalClientsCount = $totalClients->count();
@@ -26,13 +36,37 @@ class ClientController extends Controller
             $q->role('member');
         })->where('status', 'active')->count();
 
-        // Get Recent Clients Activity (Figma: Sort By Name)
+        // Get Recent Clients Activity (Figma: Sort By Name, phone, or customer ID)
         $search = $request->input('search');
         if ($search) {
-            $clientsQuery->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-                if (is_numeric($search)) {
-                    $q->orWhere('id', $search);
+            $rawSearch = trim((string)$search);
+            $cleanDigits = preg_replace('/[^0-9]/', '', $rawSearch);
+            $last10 = (strlen($cleanDigits) >= 10) ? substr($cleanDigits, -10) : null;
+
+            $extractedId = null;
+            if (preg_match('/^(?:#|mem|#mem|cust|client|customer|id)?[-\s:#]*(\d+)$/i', $rawSearch, $matches)) {
+                $extractedId = (int)$matches[1];
+            } elseif (ctype_digit($rawSearch)) {
+                $extractedId = (int)$rawSearch;
+            }
+
+            $clientsQuery->where(function($q) use ($rawSearch, $cleanDigits, $last10, $extractedId) {
+                $q->where('name', 'like', "%{$rawSearch}%")
+                  ->orWhere('email', 'like', "%{$rawSearch}%");
+
+                if ($extractedId !== null) {
+                    $q->orWhere('id', $extractedId);
+                }
+
+                if (!empty($cleanDigits) && strlen($cleanDigits) >= 3) {
+                    $q->orWhere('phone', 'like', "%{$cleanDigits}%");
+                    if (!empty($last10)) {
+                        $q->orWhere('phone', 'like', "%{$last10}%");
+                    }
+                    $q->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(phone, ''), ' ', ''), '-', ''), '+', ''), '(', ''), ')', '') LIKE ?", ["%{$cleanDigits}%"]);
+                    if (!empty($last10)) {
+                        $q->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(phone, ''), ' ', ''), '-', ''), '+', ''), '(', ''), ')', '') LIKE ?", ["%{$last10}%"]);
+                    }
                 }
             });
         }
