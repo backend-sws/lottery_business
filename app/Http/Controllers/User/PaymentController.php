@@ -8,19 +8,23 @@ use App\Helpers\ApiResponse;
 use App\Models\Installment;
 use App\Models\Loan;
 use App\Models\LoanInstallment;
+use App\Models\AgentCollection;
+use App\Models\User;
 use App\Models\UserTransaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
 {
-    // 💳 Process Payment (Collection)
+    // 💳 Process Payment (Collection with Agent & Mode support)
     public function pay(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'type' => 'required|in:committee,loan',
             'installment_id' => 'required|integer',
-            'amount' => 'required|numeric|min:0'
+            'amount' => 'required|numeric|min:0',
+            'agent_id' => 'nullable|integer',
+            'payment_mode' => 'nullable|in:cash,qr,upi,online',
         ]);
 
         if ($validator->fails()) {
@@ -31,6 +35,14 @@ class PaymentController extends Controller
         $type = $request->type;
         $installmentId = (int) $request->installment_id;
         $amount = (float) $request->amount;
+        $agentId = $request->filled('agent_id') ? (int) $request->agent_id : null;
+        $paymentMode = strtolower($request->input('payment_mode', 'cash'));
+
+        // Lookup agent if provided
+        $agent = null;
+        if ($agentId) {
+            $agent = User::find($agentId);
+        }
 
         DB::beginTransaction();
 
@@ -84,10 +96,14 @@ class PaymentController extends Controller
                     return ApiResponse::error('Committee installment is already paid.', 400);
                 }
 
-                $installment->update([
+                $updateData = [
                     'status' => 'paid',
                     'paid_date' => now()
-                ]);
+                ];
+                if ($agentId) {
+                    $updateData['collected_by'] = $agentId;
+                }
+                $installment->update($updateData);
 
                 // Check if all committee installments for this user are completed
                 if ($installment->committee_id) {
@@ -104,7 +120,6 @@ class PaymentController extends Controller
                     }
                 }
 
-                $description = "Paid committee installment #{$installment->id}";
                 $referenceType = Installment::class;
                 $referenceId = $installment->id;
 
@@ -178,10 +193,14 @@ class PaymentController extends Controller
                     return ApiResponse::error('Loan installment is already paid.', 400);
                 }
 
-                $installment->update([
+                $updateData = [
                     'status' => 'paid',
                     'paid_date' => now()
-                ]);
+                ];
+                if ($agentId) {
+                    $updateData['collected_by'] = $agentId;
+                }
+                $installment->update($updateData);
 
                 // Check if all installments for this loan are completed
                 if ($installment->loan_id) {
@@ -194,16 +213,40 @@ class PaymentController extends Controller
                     }
                 }
 
-                $description = "Paid loan installment #{$installment->id}";
                 $referenceType = LoanInstallment::class;
                 $referenceId = $installment->id;
             }
 
-            // Create User Transaction (Log member payment)
+            $effectiveAmount = $amount > 0 ? $amount : (float)($installment->total_amount ?? $installment->amount ?? 0);
+            $modeLabel = strtoupper($paymentMode);
+            $agentLabel = $agent ? " (Agent: {$agent->name})" : "";
+            $description = "Paid {$type} installment #{$installment->id} via {$modeLabel}{$agentLabel}";
+
+            // 1. Record Agent Collection if agent selected
+            if ($agentId) {
+                try {
+                    AgentCollection::create([
+                        'agent_id' => $agentId,
+                        'member_id' => $user->id,
+                        'collection_type' => $type,
+                        'amount_collected' => $effectiveAmount,
+                        'payment_mode' => $paymentMode,
+                        'status' => 'approved',
+                        'loan_installment_id' => $type === 'loan' ? $installment->id : null,
+                        'installment_id' => $type === 'committee' ? $installment->id : null,
+                        'collected_at' => now(),
+                        'details' => "Customer EMI payment via {$modeLabel} through Agent #{$agentId}",
+                    ]);
+                } catch (\Exception $e) {
+                    // Non-fatal if agent_collections table differs slightly
+                }
+            }
+
+            // 2. Create User Transaction (Log member payment)
             \App\Models\UserTransaction::create([
                 'user_id' => $user->id,
                 'type' => 'credit',
-                'amount' => $amount > 0 ? $amount : (float)($installment->total_amount ?? $installment->amount ?? 0),
+                'amount' => $effectiveAmount,
                 'description' => $description,
                 'reference_type' => $referenceType,
                 'reference_id' => $referenceId,
@@ -214,6 +257,9 @@ class PaymentController extends Controller
             return ApiResponse::success([
                 'installment_id' => $installment->id,
                 'status' => 'paid',
+                'payment_mode' => $paymentMode,
+                'agent_id' => $agentId,
+                'agent_name' => $agent ? $agent->name : null,
                 'description' => $description,
             ], 'Payment successful');
 

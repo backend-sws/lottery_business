@@ -123,6 +123,7 @@ Route::post('/register', [\App\Http\Controllers\Api\UserAuthController::class, '
         Route::get('/lotteries/setting', [\App\Http\Controllers\User\LotteryController::class, 'showSettings']);
 
         // 💸 Payments
+        Route::get('/agents', [\App\Http\Controllers\User\AgentController::class, 'index']);
         Route::post('/payments/pay', [\App\Http\Controllers\User\PaymentController::class, 'pay']);
     });
 });
