@@ -181,11 +181,14 @@ class AgentController extends Controller
                 $loanInstallment = LoanInstallment::find($collection->loan_installment_id);
 
                 if ($loanInstallment && $loanInstallment->status !== 'paid') {
-                    $loanInstallment->update([
-                        'status'       => 'paid',
-                        'paid_date'    => now(),
-                        'collected_by' => $collection->agent_id,
-                    ]);
+                    $updateFields = [
+                        'status'    => 'paid',
+                        'paid_date' => now(),
+                    ];
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('loan_installments', 'collected_by')) {
+                        $updateFields['collected_by'] = $collection->agent_id;
+                    }
+                    $loanInstallment->update($updateFields);
                 }
             }
 
@@ -263,11 +266,14 @@ class AgentController extends Controller
                 } elseif ($collection->collection_type === 'loan' && $collection->loan_installment_id) {
                     $loanInstallment = LoanInstallment::find($collection->loan_installment_id);
                     if ($loanInstallment && $loanInstallment->status === 'paid') {
-                        $loanInstallment->update([
-                            'status' => 'pending',
+                        $updateFields = [
+                            'status'    => 'pending',
                             'paid_date' => null,
-                            'collected_by' => null,
-                        ]);
+                        ];
+                        if (\Illuminate\Support\Facades\Schema::hasColumn('loan_installments', 'collected_by')) {
+                            $updateFields['collected_by'] = null;
+                        }
+                        $loanInstallment->update($updateFields);
                     }
                 }
             }

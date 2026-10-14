@@ -100,7 +100,7 @@ class PaymentController extends Controller
                     'status' => 'paid',
                     'paid_date' => now()
                 ];
-                if ($agentId) {
+                if ($agentId && \Illuminate\Support\Facades\Schema::hasColumn('installments', 'collected_by')) {
                     $updateData['collected_by'] = $agentId;
                 }
                 $installment->update($updateData);
@@ -197,7 +197,7 @@ class PaymentController extends Controller
                     'status' => 'paid',
                     'paid_date' => now()
                 ];
-                if ($agentId) {
+                if ($agentId && \Illuminate\Support\Facades\Schema::hasColumn('loan_installments', 'collected_by')) {
                     $updateData['collected_by'] = $agentId;
                 }
                 $installment->update($updateData);

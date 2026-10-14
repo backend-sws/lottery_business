@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('loan_installments', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasTable('loan_installments') && !Schema::hasColumn('loan_installments', 'collected_by')) {
+            Schema::table('loan_installments', function (Blueprint $table) {
+                $table->foreignId('collected_by')->nullable()->after('paid_date')->constrained('users')->nullOnDelete();
+            });
+        }
     }
 
     /**
@@ -21,8 +23,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('loan_installments', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasTable('loan_installments') && Schema::hasColumn('loan_installments', 'collected_by')) {
+            Schema::table('loan_installments', function (Blueprint $table) {
+                $table->dropForeign(['collected_by']);
+                $table->dropColumn('collected_by');
+            });
+        }
     }
 };
